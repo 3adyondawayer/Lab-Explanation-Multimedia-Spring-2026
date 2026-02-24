@@ -547,7 +547,6 @@
     </div>
   </div>
 </div>
-
 <!-- imshow -->
 <div class="code-accordion">
   <button class="code-trigger" onclick="toggleCode(this)" aria-expanded="false">
@@ -558,8 +557,22 @@
   </button>
   <div class="code-body">
 <pre><span class="fn">imshow</span>(<span class="var">I</span>);                      <span class="cm">% show uint8 or properly-scaled double</span>
-<span class="fn">imshow</span>(<span class="var">I</span>, []);                   <span class="cm">% auto-scale: maps min→black, max→white</span>
-<span class="fn">imshow</span>(<span class="var">I</span>, [<span class="num">0</span> <span class="num">255</span>]);              <span class="cm">% explicit range</span>
+<span class="fn">imshow</span>(<span class="var">I</span>, []);                   <span class="cm">% auto-scale: "MATLAB, you decide what's black and white"</span>
+<span class="fn">imshow</span>(<span class="var">I</span>, [<span class="num">150</span> <span class="num">160</span>]);              <span class="cm">% Manual: "150 = pure black, 160 = pure white, everything else in between"</span>
+
+<span class="cm">% Think of [low high] as giving MATLAB a mapping instruction:</span>
+<span class="cm">% - Any pixel with value = low (150) → displayed as BLACK</span>
+<span class="cm">% - Any pixel with value = high (160) → displayed as WHITE</span>
+<span class="cm">% - Everything in between → shades of gray</span>
+<span class="cm">% - Values below 150 → also BLACK (clipped)</span>
+<span class="cm">% - Values above 160 → also WHITE (clipped)</span>
+
+<span class="cm">% Real-world example with [150 160]:</span>
+<span class="cm">%   Pixel value 150 → pure black</span>
+<span class="cm">%   Pixel value 155 → medium gray (halfway)</span>
+<span class="cm">%   Pixel value 160 → pure white</span>
+<span class="cm">%   Pixel value 140 → also black (clipped)</span>
+<span class="cm">%   Pixel value 170 → also white (clipped)</span>
 
 <span class="cm">% If I is double but in range [0,255] instead of [0,1], imshow shows white!</span>
 <span class="cm">% Fix: either divide by 255, or use im2double, or use imshow(I,[])</span></pre>
@@ -568,10 +581,42 @@
         <div class="def-label">Common Pitfall</div>
         <p>If you convert with <span class="fn-pill">double(I)</span> instead of <span class="fn-pill">im2double(I)</span>, pixel values remain in [0,255]. Calling <span class="fn-pill">imshow</span> will display the image as pure white because everything ≥ 1 is clipped to white in double mode. Always verify your range.</p>
       </div>
+      
+      <!-- My friendly addition starts here -->
+      <div class="def-box green" style="margin-top:1rem;">
+        <div class="def-label">🎨 Understanding imshow(I, [150 160]) Like a Pro</div>
+        <p><strong>imshow(I, [low high])</strong> is like giving MATLAB a translation dictionary:</p>
+        <ul style="margin-left:1.2rem; color:var(--text);">
+          <li><strong>low (150)</strong> = "Whatever number I put here, show it as BLACK"</li>
+          <li><strong>high (160)</strong> = "Whatever number I put here, show it as WHITE"</li>
+          <li><strong>Everything in between</strong> = "Show as shades of gray"</li>
+          <li><strong>Below 150</strong> = "Also black (can't get darker than black!)"</li>
+          <li><strong>Above 160</strong> = "Also white (can't get brighter than white!)"</li>
+        </ul>
+        <p style="margin-top:0.8rem;"><strong>Example with [150 160]:</strong><br>
+        → Pixels with value <strong>150</strong> become <span style="color:white; background:black; padding:0.1rem 0.5rem;">⬤ BLACK</span><br>
+        → Pixels with value <strong>155</strong> become <span style="color:#888; background:#888; padding:0.1rem 0.5rem;">⬤ MEDIUM GRAY</span><br>
+        → Pixels with value <strong>160</strong> become <span style="color:black; background:white; padding:0.1rem 0.5rem; border:1px solid gray;">⬤ WHITE</span><br>
+        → Pixels with value <strong>140</strong> become <span style="color:white; background:black; padding:0.1rem 0.5rem;">⬤ ALSO BLACK</span> (clipped)<br>
+        → Pixels with value <strong>170</strong> become <span style="color:black; background:white; padding:0.1rem 0.5rem; border:1px solid gray;">⬤ ALSO WHITE</span> (clipped)</p>
+        <p style="margin-top:0.8rem; background:rgba(79,195,247,0.1); padding:0.5rem; border-radius:0.3rem;">
+        💡 <strong>Pro tip:</strong> When you're not sure about your image's range, use <code>imshow(I, [])</code> and let MATLAB figure it out automatically! It's like saying "MATLAB, find the darkest pixel and call it black, find the brightest pixel and call it white, and stretch everything in between."
+        </p>
+      </div>
+      <!-- My friendly addition ends here -->
+      
+      <div class="def-box" style="margin-top:1rem;">
+        <div class="def-label">🎯 The Three Ways to Use imshow</div>
+        <table style="width:100%; font-size:0.8rem;">
+          <tr><th>Command</th><th>What it means</th><th>Best for</th></tr>
+          <tr><td><code>imshow(I)</code></td><td>"Show it exactly as is"</td><td>uint8 images or properly scaled [0,1] double</td></tr>
+          <tr><td><code>imshow(I, [])</code></td><td>"MATLAB, you choose black & white based on my image's min/max"</td><td>When you want maximum contrast</td></tr>
+          <tr><td><code>imshow(I, [150 160])</code></td><td>"I'm the boss: 150 = black, 160 = white"</td><td>When you want to focus on a specific intensity range</td></tr>
+        </table>
+      </div>
     </div>
   </div>
 </div>
-
 <!-- Format Conversion -->
 <div class="code-accordion">
   <button class="code-trigger" onclick="toggleCode(this)" aria-expanded="false">
@@ -682,7 +727,6 @@
 
 <p>Where <em>r</em> is the input pixel intensity and <em>s</em> is the output. The transformation function T entirely determines the effect: brightening, darkening, contrast manipulation, etc.</p>
 
-<!-- 2.1 Negative -->
 <div class="def-box orange">
   <div class="def-label">Transformation 1 — Negative (Inversion)</div>
   <p>Reverses the intensity scale: bright pixels become dark and vice versa. Useful for enhancing white details embedded in dark regions (e.g., medical X-ray analysis).</p>
@@ -692,48 +736,50 @@
 <div class="code-accordion">
   <button class="code-trigger" onclick="toggleCode(this)" aria-expanded="false">
     <span class="pulse"></span>
-    <span class="func-name">Negative Transformation</span>
-    <span class="func-desc">s = 255 − r</span>
+    <span class="func-name">imcomplement( I )</span>
+    <span class="func-desc">Native function for image inversion</span>
     <span class="arrow">▼</span>
   </button>
   <div class="code-body">
 <pre><span class="var">I</span>   <span class="op">=</span> <span class="fn">imread</span>(<span class="st">'image.jpg'</span>);
+
+<span class="cm">% ── Native MATLAB approach ──────────────────────────</span>
+<span class="var">neg_native</span> <span class="op">=</span> <span class="fn">imcomplement</span>(<span class="var">I</span>);
+
+<span class="cm">% ── Manual math approach (for understanding) ────────</span>
 <span class="var">Id</span>  <span class="op">=</span> <span class="fn">double</span>(<span class="var">I</span>);           <span class="cm">% → [0,255] for arithmetic</span>
+<span class="var">neg_manual</span> <span class="op">=</span> <span class="fn">uint8</span>(<span class="num">255</span> <span class="op">-</span> <span class="var">Id</span>); 
 
-<span class="var">neg</span> <span class="op">=</span> <span class="num">255</span> <span class="op">-</span> <span class="var">Id</span>;            <span class="cm">% invert each pixel: s = (L-1) - r</span>
-
-<span class="fn">imshow</span>(<span class="fn">uint8</span>(<span class="var">neg</span>));         <span class="cm">% cast back to uint8 before display</span></pre>
+<span class="fn">imshow</span>(<span class="var">neg_native</span>);</pre>
   </div>
 </div>
 
-<!-- 2.2 Power Law -->
 <div class="def-box purple">
   <div class="def-label">Transformation 2 — Power Law (Gamma Correction)</div>
-  <p>Raises each normalized pixel value to a power γ (gamma). When γ &lt; 1 the image is brightened (useful for dark/underexposed images). When γ &gt; 1 the image is darkened. This models the non-linear response of display devices (monitors, printers).</p>
+  <p>Raises each normalized pixel value to a power γ (gamma). When γ &lt; 1 the image is brightened. When γ &gt; 1 the image is darkened. This models the non-linear response of display devices.</p>
 </div>
 <div class="formula-block">s = c · r<sup>γ</sup> &nbsp;&nbsp;&nbsp;&nbsp; (with r normalized to [0,1] when c = 1)</div>
-<p>The constant <em>c</em> is a scaling factor (usually 1). In MATLAB, apply on normalized double values so the output stays in [0,1].</p>
 
 <div class="code-accordion">
   <button class="code-trigger" onclick="toggleCode(this)" aria-expanded="false">
     <span class="pulse"></span>
-    <span class="func-name">Power Law Transformation</span>
-    <span class="func-desc">s = c · r^γ — gamma correction</span>
+    <span class="func-name">imadjust( I, [in_range], [out_range], gamma )</span>
+    <span class="func-desc">Native function for gamma correction</span>
     <span class="arrow">▼</span>
   </button>
   <div class="code-body">
 <pre><span class="var">I</span>  <span class="op">=</span> <span class="fn">imread</span>(<span class="st">'image.jpg'</span>);
-<span class="var">Id</span> <span class="op">=</span> <span class="fn">im2double</span>(<span class="var">I</span>);         <span class="cm">% → normalized [0,1] ← important here!</span>
 
-<span class="var">c</span>     <span class="op">=</span> <span class="num">1</span>;
-<span class="var">gamma</span> <span class="op">=</span> <span class="num">0.5</span>;                 <span class="cm">% < 1 brightens, > 1 darkens</span>
+<span class="cm">% ── Native MATLAB approach ──────────────────────────</span>
+<span class="cm">% Empty brackets [] mean "use full dynamic range"</span>
+<span class="var">pow_native</span> <span class="op">=</span> <span class="fn">imadjust</span>(<span class="var">I</span>, [], [], <span class="num">0.5</span>);
 
-<span class="var">pow</span> <span class="op">=</span> <span class="var">c</span> <span class="op">.*</span> (<span class="var">Id</span> <span class="op">.^</span> <span class="var">gamma</span>);    <span class="cm">% element-wise power; result stays in [0,1]</span>
+<span class="cm">% ── Manual math approach (for understanding) ────────</span>
+<span class="var">Id</span> <span class="op">=</span> <span class="fn">im2double</span>(<span class="var">I</span>);         <span class="cm">% → normalized [0,1]</span>
+<span class="var">c</span>  <span class="op">=</span> <span class="num">1</span>; <span class="var">gamma</span> <span class="op">=</span> <span class="num">0.5</span>;                 
+<span class="var">pow_manual</span> <span class="op">=</span> <span class="var">c</span> <span class="op">.*</span> (<span class="var">Id</span> <span class="op">.^</span> <span class="var">gamma</span>);    
 
-<span class="fn">imshow</span>(<span class="var">pow</span>);                 <span class="cm">% double in [0,1] → imshow handles it directly</span>
-
-<span class="cm">% If you need to save:</span>
-<span class="fn">imwrite</span>(<span class="fn">im2uint8</span>(<span class="var">pow</span>), <span class="st">'gamma_corrected.png'</span>);</pre>
+<span class="fn">imshow</span>(<span class="var">pow_native</span>);</pre>
     <div style="padding:0 1.5rem 1rem;">
       <div class="def-box green" style="margin-top:0;">
         <div class="def-label">Intuition</div>
@@ -743,76 +789,76 @@
   </div>
 </div>
 
-<!-- 2.3 Log -->
 <div class="def-box green">
   <div class="def-label">Transformation 3 — Logarithmic</div>
-  <p>Maps pixel values through a logarithm. This <strong>compresses the dynamic range</strong> — very bright pixel values are squashed together, while dark pixels are spread out. Classically used to visualize the Fourier spectrum, which has enormous dynamic range between the DC component and high-frequency details.</p>
+  <p>Maps pixel values through a logarithm. This <strong>compresses the dynamic range</strong> — very bright pixel values are squashed together, while dark pixels are spread out. Classically used to visualize the Fourier spectrum.</p>
 </div>
 <div class="formula-block">s = c · log(1 + r)</div>
-<p>The <code>+1</code> prevents log(0) = −∞ when a pixel is zero. In MATLAB, <span class="fn-pill">log()</span> computes natural logarithm. Use <span class="fn-pill">log10()</span> for base-10 or <span class="fn-pill">log2()</span> for base-2.</p>
 
 <div class="code-accordion">
   <button class="code-trigger" onclick="toggleCode(this)" aria-expanded="false">
     <span class="pulse"></span>
-    <span class="func-name">Logarithmic Transformation</span>
-    <span class="func-desc">s = c · log(1 + r) — dynamic range compression</span>
+    <span class="func-name">log( X )</span>
+    <span class="func-desc">Standard mathematical logarithm function</span>
     <span class="arrow">▼</span>
   </button>
   <div class="code-body">
 <pre><span class="var">I</span>  <span class="op">=</span> <span class="fn">imread</span>(<span class="st">'image.jpg'</span>);
 <span class="var">Id</span> <span class="op">=</span> <span class="fn">double</span>(<span class="var">I</span>);             <span class="cm">% work in [0,255] range</span>
 
-<span class="var">c</span>   <span class="op">=</span> <span class="num">15</span>;                    <span class="cm">% scaling constant (tune to get output in ~[0,255])</span>
+<span class="cm">% MATLAB relies on standard math functions for log transforms</span>
+<span class="var">c</span>   <span class="op">=</span> <span class="num">15</span>;                   <span class="cm">% scaling constant (tune to get output in ~[0,255])</span>
 <span class="var">lg</span>  <span class="op">=</span> <span class="var">c</span> <span class="op">.*</span> <span class="fn">log</span>(<span class="num">1</span> <span class="op">+</span> <span class="var">Id</span>);     <span class="cm">% log of (1+r) avoids log(0)</span>
 
-<span class="fn">imshow</span>(<span class="fn">uint8</span>(<span class="var">lg</span>));           <span class="cm">% cast to uint8 (values > 255 get clipped to 255)</span>
-
-<span class="cm">% Tip: choose c so that c*log(1+255) ≈ 255</span>
-<span class="cm">% c = 255 / log(1+255) ≈ 45.9 — gives full-range output</span></pre>
+<span class="fn">imshow</span>(<span class="fn">uint8</span>(<span class="var">lg</span>));          <span class="cm">% cast to uint8 (values > 255 get clipped to 255)</span></pre>
   </div>
 </div>
 
-<!-- 2.4 Contrast Stretching -->
 <div class="def-box">
   <div class="def-label">Transformation 4 — Contrast Stretching</div>
-  <p>A sigmoidal (S-shaped) mapping that <strong>compresses both extremes</strong> of the dynamic range and <strong>stretches the mid-tones</strong>. The midpoint <em>m</em> and slope exponent <em>E</em> control where the transition occurs and how steep it is. Very large E produces an effect close to thresholding.</p>
+  <p>A mapping that <strong>compresses both extremes</strong> of the dynamic range and <strong>stretches the mid-tones</strong>. MATLAB natively performs linear stretching, while manual implementation can create a smooth sigmoidal (S-shaped) curve.</p>
 </div>
-<div class="formula-block">s = 1 / (1 + (m / r)<sup>E</sup>) &nbsp;&nbsp;&nbsp;&nbsp; (add eps to r to avoid division by zero)</div>
+<div class="formula-block">imadjust(I, [low_in high_in], [low_out high_out]) &nbsp;&nbsp;&nbsp;&nbsp; (Native Linear Stretch)<br>s = 1 / (1 + (m / r)<sup>E</sup>) &nbsp;&nbsp;&nbsp;&nbsp; (Manual S-curve)</div>
 
 <div class="code-accordion">
   <button class="code-trigger" onclick="toggleCode(this)" aria-expanded="false">
     <span class="pulse"></span>
-    <span class="func-name">Contrast Stretching</span>
-    <span class="func-desc">Sigmoidal transformation — S-curve</span>
+    <span class="func-name">imadjust( I )</span>
+    <span class="func-desc">Native function for contrast stretching</span>
     <span class="arrow">▼</span>
   </button>
   <div class="code-body">
 <pre><span class="var">I</span>  <span class="op">=</span> <span class="fn">imread</span>(<span class="st">'image.jpg'</span>);
-<span class="var">Id</span> <span class="op">=</span> <span class="fn">im2double</span>(<span class="var">I</span>);         <span class="cm">% normalize to [0,1]</span>
 
-<span class="var">m</span> <span class="op">=</span> <span class="num">0.5</span>;   <span class="cm">% midpoint (0.5 = middle of [0,1] range)</span>
-<span class="var">E</span> <span class="op">=</span> <span class="num">4</span>;     <span class="cm">% slope exponent: higher = steeper S-curve</span>
+<span class="cm">% ── Native MATLAB Automatic Stretch ─────────────────</span>
+<span class="cm">% Automatically saturates the bottom 1% and top 1% of pixels</span>
+<span class="var">cs_auto</span> <span class="op">=</span> <span class="fn">imadjust</span>(<span class="var">I</span>);
 
-<span class="cm">% eps is a tiny MATLAB constant (~2.2e-16) — prevents division by zero</span>
-<span class="var">cs</span> <span class="op">=</span> <span class="num">1</span> <span class="op">./</span> (<span class="num">1</span> <span class="op">+</span> (<span class="var">m</span> <span class="op">./</span> (<span class="var">Id</span> <span class="op">+</span> <span class="fn">eps</span>)) <span class="op">.^</span> <span class="var">E</span>);
+<span class="cm">% ── Native MATLAB Manual Stretch ────────────────────</span>
+<span class="cm">% Maps input intensities [0.3 to 0.7] across full [0.0 to 1.0] output</span>
+<span class="var">cs_manual</span> <span class="op">=</span> <span class="fn">imadjust</span>(<span class="var">I</span>, [<span class="num">0.3</span> <span class="num">0.7</span>], [<span class="num">0</span> <span class="num">1</span>]);
 
-<span class="fn">imshow</span>(<span class="var">cs</span>);   <span class="cm">% still in [0,1], imshow handles double directly</span></pre>
+<span class="cm">% ── Manual math approach (S-curve) ──────────────────</span>
+<span class="var">Id</span> <span class="op">=</span> <span class="fn">im2double</span>(<span class="var">I</span>);         
+<span class="var">m</span> <span class="op">=</span> <span class="num">0.5</span>; <span class="var">E</span> <span class="op">=</span> <span class="num">4</span>;     
+<span class="var">cs_math</span> <span class="op">=</span> <span class="num">1</span> <span class="op">./</span> (<span class="num">1</span> <span class="op">+</span> (<span class="var">m</span> <span class="op">./</span> (<span class="var">Id</span> <span class="op">+</span> <span class="fn">eps</span>)) <span class="op">.^</span> <span class="var">E</span>);
+
+<span class="fn">imshow</span>(<span class="var">cs_auto</span>);</pre>
     <div style="padding:0 1.5rem 1rem;">
       <div class="def-box yellow" style="margin-top:0;">
-        <div class="def-label">Why eps?</div>
-        <p><span class="fn-pill">eps</span> in MATLAB is the machine epsilon — the smallest floating-point difference from 1.0, approximately 2.2×10⁻¹⁶. Adding it to <em>r</em> before division ensures pixels with value 0 don't cause a division-by-zero error, while having negligible effect on non-zero pixels.</p>
+        <div class="def-label">Why eps? (For the math approach)</div>
+        <p><span class="fn-pill">eps</span> in MATLAB is the machine epsilon — the smallest floating-point difference from 1.0. Adding it to <em>r</em> before division ensures pixels with value 0 don't cause a division-by-zero error.</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Exercise 2 -->
 <div class="exercise">
   <div class="exercise-header">
     <span class="ex-badge">Ex. 2</span>
     <span class="exercise-title">Four Transformations on a 2×2 Grid</span>
   </div>
-  <p>Read <code style="color:var(--accent3);">'05.jpg'</code>. Apply negative (s = 255−r), power law (c=1, γ=0.9), and logarithmic (c=15) transformations. Display all four images (original + 3 transforms) in a 2×2 subplot grid.</p>
+  <p>Read <code style="color:var(--accent3);">'05.jpg'</code>. Apply negative, power law (γ=0.9), and logarithmic (c=15) transformations using MATLAB's <strong>native functions</strong> where available. Display all four images (original + 3 transforms) in a 2×2 subplot grid.</p>
   <div class="code-accordion" style="margin-top:1rem;">
     <button class="code-trigger" onclick="toggleCode(this)" aria-expanded="false">
       <span class="func-name">Solution</span>
@@ -821,16 +867,15 @@
     </button>
     <div class="code-body">
 <pre><span class="var">I</span>   <span class="op">=</span> <span class="fn">imread</span>(<span class="st">'05.jpg'</span>);
-<span class="var">Id</span>  <span class="op">=</span> <span class="fn">double</span>(<span class="var">I</span>);         <span class="cm">% [0,255] double for formula-based ops</span>
 
-<span class="cm">% Negative: s = 255 - r</span>
-<span class="var">neg</span> <span class="op">=</span> <span class="fn">uint8</span>(<span class="num">255</span> <span class="op">-</span> <span class="var">Id</span>);
+<span class="cm">% 1. Negative (Native)</span>
+<span class="var">neg</span> <span class="op">=</span> <span class="fn">imcomplement</span>(<span class="var">I</span>);
 
-<span class="cm">% Power law: s = r^0.9  (work in [0,1], then scale back)</span>
-<span class="var">In</span>  <span class="op">=</span> <span class="var">Id</span> <span class="op">/</span> <span class="num">255</span>;           <span class="cm">% normalize</span>
-<span class="var">pow</span> <span class="op">=</span> <span class="fn">uint8</span>(<span class="num">255</span> <span class="op">.*</span> (<span class="var">In</span> <span class="op">.^</span> <span class="num">0.9</span>));
+<span class="cm">% 2. Power Law / Gamma (Native)</span>
+<span class="var">pow</span> <span class="op">=</span> <span class="fn">imadjust</span>(<span class="var">I</span>, [], [], <span class="num">0.9</span>);
 
-<span class="cm">% Logarithmic: s = 15 * log(1 + r)</span>
+<span class="cm">% 3. Logarithmic (Math)</span>
+<span class="var">Id</span>  <span class="op">=</span> <span class="fn">double</span>(<span class="var">I</span>);
 <span class="var">lg</span>  <span class="op">=</span> <span class="fn">uint8</span>(<span class="num">15</span> <span class="op">.*</span> <span class="fn">log</span>(<span class="num">1</span> <span class="op">+</span> <span class="var">Id</span>));
 
 <span class="cm">% Plot on 2×2 grid</span>
@@ -846,7 +891,49 @@
     <p><span class="fn-pill">subplot(rows, cols, index)</span> divides the figure into a rows×cols grid and activates panel number <em>index</em> (left-to-right, top-to-bottom). Any subsequent <span class="fn-pill">imshow</span> or <span class="fn-pill">plot</span> call draws into that panel.</p>
   </div>
 </div>
+<!-- Exercise 2 -->
+<div class="exercise">
+  <div class="exercise-header">
+    <span class="ex-badge">Ex. 2</span>
+    <span class="exercise-title">Five Transformations on a 2×3 Grid</span>
+  </div>
+  <p>Read <code style="color:var(--accent3);">'05.jpg'</code>. Apply negative, power law (γ=0.9), logarithmic (c=15), and <strong>contrast stretching</strong> transformations using MATLAB's native functions where available. Display all five images (original + 4 transforms) in a 2×3 subplot grid.</p>
+  <div class="code-accordion" style="margin-top:1rem;">
+    <button class="code-trigger" onclick="toggleCode(this)" aria-expanded="false">
+      <span class="func-name">Solution</span>
+      <span class="func-desc">Click to reveal</span>
+      <span class="arrow">▼</span>
+    </button>
+    <div class="code-body">
+<pre><span class="var">I</span>   <span class="op">=</span> <span class="fn">imread</span>(<span class="st">'05.jpg'</span>);
 
+<span class="cm">% 1. Negative (Native)</span>
+<span class="var">neg</span> <span class="op">=</span> <span class="fn">imcomplement</span>(<span class="var">I</span>);
+
+<span class="cm">% 2. Power Law / Gamma (Native)</span>
+<span class="var">pow</span> <span class="op">=</span> <span class="fn">imadjust</span>(<span class="var">I</span>, [], [], <span class="num">0.9</span>);
+
+<span class="cm">% 3. Logarithmic (Math)</span>
+<span class="var">Id</span>  <span class="op">=</span> <span class="fn">double</span>(<span class="var">I</span>);
+<span class="var">lg</span>  <span class="op">=</span> <span class="fn">uint8</span>(<span class="num">15</span> <span class="op">.*</span> <span class="fn">log</span>(<span class="num">1</span> <span class="op">+</span> <span class="var">Id</span>));
+
+<span class="cm">% 4. Contrast Stretching (Native)</span>
+<span class="var">cs</span>  <span class="op">=</span> <span class="fn">imadjust</span>(<span class="var">I</span>);
+
+<span class="cm">% Plot on 2×3 grid</span>
+<span class="fn">figure</span>;
+<span class="fn">subplot</span>(<span class="num">2</span>, <span class="num">3</span>, <span class="num">1</span>); <span class="fn">imshow</span>(<span class="var">I</span>);   <span class="fn">title</span>(<span class="st">'Original'</span>);
+<span class="fn">subplot</span>(<span class="num">2</span>, <span class="num">3</span>, <span class="num">2</span>); <span class="fn">imshow</span>(<span class="var">neg</span>); <span class="fn">title</span>(<span class="st">'Negative'</span>);
+<span class="fn">subplot</span>(<span class="num">2</span>, <span class="num">3</span>, <span class="num">3</span>); <span class="fn">imshow</span>(<span class="var">pow</span>); <span class="fn">title</span>(<span class="st">'Power Law \gamma=0.9'</span>);
+<span class="fn">subplot</span>(<span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>); <span class="fn">imshow</span>(<span class="var">lg</span>);  <span class="fn">title</span>(<span class="st">'Logarithmic c=15'</span>);
+<span class="fn">subplot</span>(<span class="num">2</span>, <span class="num">3</span>, <span class="num">5</span>); <span class="fn">imshow</span>(<span class="var">cs</span>);  <span class="fn">title</span>(<span class="st">'Contrast Stretch'</span>);</pre>
+    </div>
+  </div>
+  <div class="hint-box">
+    <div class="hint-label">💡 subplot explained</div>
+    <p><span class="fn-pill">subplot(rows, cols, index)</span> divides the figure into a rows×cols grid and activates panel number <em>index</em> (left-to-right, top-to-bottom). Any subsequent <span class="fn-pill">imshow</span> or <span class="fn-pill">plot</span> call draws into that panel.</p>
+  </div>
+</div>
 
 <!-- ═══════════════════════════════════════════════════════════
      SECTION 3 — HISTOGRAMS
