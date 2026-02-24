@@ -16,6 +16,7 @@
     --accent2: #f97316;
     --accent3: #a78bfa;
     --accent4: #34d399;
+    --accent5: #fbbf24;
     --text: #e2e8f0;
     --muted: #7c8ba1;
   }
@@ -79,7 +80,7 @@
   }
 
   /* ── CONTAINER ── */
-  .container { max-width: 1000px; margin: 0 auto; padding: 0 2rem 4rem; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem 4rem; }
 
   /* ── SECTION HEADERS ── */
   .section-header {
@@ -112,7 +113,7 @@
   /* ── LAB CARDS GRID ── */
   .labs-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 1.5rem;
     margin: 2rem 0;
   }
@@ -128,8 +129,9 @@
     text-decoration: none;
     color: var(--text);
     display: block;
+    height: 100%;
   }
-  .lab-card:hover {
+  .lab-card:hover:not(.coming-soon) {
     transform: translateY(-4px);
     border-color: var(--accent);
     box-shadow: 0 8px 20px rgba(0,0,0,0.4);
@@ -145,6 +147,43 @@
     background: linear-gradient(90deg, var(--accent), var(--accent3));
   }
 
+  /* Coming Soon specific styling */
+  .lab-card.coming-soon {
+    opacity: 0.85;
+    background: linear-gradient(135deg, var(--bg3), var(--bg2));
+    border-style: dashed;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .lab-card.coming-soon::before {
+    background: linear-gradient(90deg, var(--muted), var(--border));
+  }
+
+  .lab-card.coming-soon::after {
+    content: '🔜';
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    font-size: 2rem;
+    opacity: 0.15;
+    transform: rotate(15deg);
+  }
+
+  .coming-soon-badge {
+    display: inline-block;
+    background: rgba(124, 139, 161, 0.2);
+    border: 1px solid var(--muted);
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 1rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.7rem;
+  }
+
   .lab-number {
     font-family: 'Space Mono', monospace;
     font-size: 0.75rem;
@@ -152,6 +191,10 @@
     letter-spacing: 0.12em;
     text-transform: uppercase;
     margin-bottom: 0.7rem;
+  }
+
+  .lab-card.coming-soon .lab-number {
+    color: var(--muted);
   }
 
   .lab-title {
@@ -185,6 +228,10 @@
     letter-spacing: 0.05em;
   }
 
+  .lab-card.coming-soon .topic-tag {
+    opacity: 0.6;
+  }
+
   .lab-link {
     display: inline-flex;
     align-items: center;
@@ -198,8 +245,12 @@
   .lab-link .arrow {
     transition: transform 0.2s;
   }
-  .lab-card:hover .lab-link .arrow {
+  .lab-card:hover:not(.coming-soon) .lab-link .arrow {
     transform: translateX(4px);
+  }
+
+  .lab-card.coming-soon .lab-link {
+    color: var(--muted);
   }
 
   /* Topic tag colors */
@@ -207,7 +258,8 @@
   .tag-orange{ border-color: rgba(249,115,22,0.4); color: var(--accent2); background: rgba(249,115,22,0.07); }
   .tag-purple{ border-color: rgba(167,139,250,0.4);color: var(--accent3); background: rgba(167,139,250,0.07);}
   .tag-green { border-color: rgba(52,211,153,0.4); color: var(--accent4); background: rgba(52,211,153,0.07); }
-  .tag-yellow{ border-color: rgba(251,191,36,0.4); color: var(--yellow);  background: rgba(251,191,36,0.07); }
+  .tag-yellow{ border-color: rgba(251,191,36,0.4); color: var(--accent5); background: rgba(251,191,36,0.07); }
+  .tag-gray  { border-color: rgba(124,139,161,0.4); color: var(--muted);  background: rgba(124,139,161,0.07); }
 
   /* Info Cards */
   .info-card {
@@ -276,6 +328,14 @@
     100%{ box-shadow: 0 0 0 0 rgba(52,211,153,0); }
   }
 
+  .section-subtitle {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--accent);
+    margin: -1rem 0 2rem 0;
+    letter-spacing: 0.05em;
+  }
+
   @media (max-width: 640px) {
     .section-title { font-size: 1.25rem; }
     .container { padding: 0 1rem 2rem; }
@@ -311,12 +371,13 @@
     </div>
   </div>
 
-  <!-- Labs Section -->
+  <!-- Current Labs Section -->
   <div class="section-header">
     <span class="section-num">01</span>
-    <h2 class="section-title">Lab Materials</h2>
+    <h2 class="section-title">Available Labs</h2>
     <div class="accent-line"></div>
   </div>
+  <div class="section-subtitle">⬇️ Click on any card to open the lab material</div>
 
   <div class="labs-grid">
     
@@ -355,27 +416,118 @@
         Open Lab <span class="arrow">→</span>
       </div>
     </a>
+  </div>
 
-    <!-- Placeholder for future labs (commented out)
-    <a href="lab3.html" class="lab-card" style="opacity:0.8;">
-      <div class="lab-number">LAB 03</div>
+  <!-- Coming Soon Labs Section -->
+  <div class="section-header" style="margin-top:4rem;">
+    <span class="section-num">02</span>
+    <h2 class="section-title">Coming Soon</h2>
+    <div class="accent-line"></div>
+  </div>
+  <div class="section-subtitle">📅 More labs are being prepared — check back later!</div>
+
+  <div class="labs-grid">
+    
+    <!-- Lab 3 Card A -->
+    <div class="lab-card coming-soon">
+      <div class="coming-soon-badge">IN PREPARATION</div>
+      <div class="lab-number">LAB 03 · PART A</div>
       <div class="lab-title">Frequency Domain Filtering</div>
-      <div class="lab-desc">Coming soon: Fourier transform, FFT, frequency domain filters, and applications.</div>
+      <div class="lab-desc">Introduction to Fourier transform, FFT, and frequency domain filtering techniques. Learn to implement low-pass and high-pass filters in the frequency domain.</div>
       <div class="lab-topics">
-        <span class="topic-tag tag-purple">Fourier</span>
-        <span class="topic-tag tag-blue">FFT</span>
-        <span class="topic-tag tag-yellow">Filters</span>
+        <span class="topic-tag tag-gray">Fourier Transform</span>
+        <span class="topic-tag tag-gray">FFT</span>
+        <span class="topic-tag tag-gray">Low-pass Filters</span>
       </div>
       <div class="lab-link">
         Coming Soon <span class="arrow">→</span>
       </div>
-    </a>
-    -->
+    </div>
+
+    <!-- Lab 3 Card B -->
+    <div class="lab-card coming-soon">
+      <div class="coming-soon-badge">IN PREPARATION</div>
+      <div class="lab-number">LAB 03 · PART B</div>
+      <div class="lab-title">Frequency Domain Applications</div>
+      <div class="lab-desc">Advanced frequency domain techniques including high-pass filtering, band-pass filters, and applications in image sharpening and noise removal.</div>
+      <div class="lab-topics">
+        <span class="topic-tag tag-gray">High-pass Filters</span>
+        <span class="topic-tag tag-gray">Band-pass</span>
+        <span class="topic-tag tag-gray">Noise Removal</span>
+      </div>
+      <div class="lab-link">
+        Coming Soon <span class="arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Lab 4 Card A -->
+    <div class="lab-card coming-soon">
+      <div class="coming-soon-badge">IN PREPARATION</div>
+      <div class="lab-number">LAB 04 · PART A</div>
+      <div class="lab-title">Image Restoration</div>
+      <div class="lab-desc">Understanding image degradation models, noise characterization, and restoration techniques including inverse filtering and Wiener filtering.</div>
+      <div class="lab-topics">
+        <span class="topic-tag tag-gray">Noise Models</span>
+        <span class="topic-tag tag-gray">Inverse Filter</span>
+        <span class="topic-tag tag-gray">Wiener Filter</span>
+      </div>
+      <div class="lab-link">
+        Coming Soon <span class="arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Lab 4 Card B -->
+    <div class="lab-card coming-soon">
+      <div class="coming-soon-badge">IN PREPARATION</div>
+      <div class="lab-number">LAB 04 · PART B</div>
+      <div class="lab-title">Advanced Restoration</div>
+      <div class="lab-desc">Blind deconvolution, iterative restoration methods, and practical applications in deblurring and image recovery.</div>
+      <div class="lab-topics">
+        <span class="topic-tag tag-gray">Blind Deconvolution</span>
+        <span class="topic-tag tag-gray">Deblurring</span>
+        <span class="topic-tag tag-gray">Recovery</span>
+      </div>
+      <div class="lab-link">
+        Coming Soon <span class="arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Lab 5 Card A -->
+    <div class="lab-card coming-soon">
+      <div class="coming-soon-badge">IN PREPARATION</div>
+      <div class="lab-number">LAB 05 · PART A</div>
+      <div class="lab-title">Image Compression</div>
+      <div class="lab-desc">Fundamentals of image compression, lossless vs lossy techniques, and implementation of basic compression algorithms.</div>
+      <div class="lab-topics">
+        <span class="topic-tag tag-gray">Lossless Compression</span>
+        <span class="topic-tag tag-gray">Lossy Compression</span>
+        <span class="topic-tag tag-gray">Huffman Coding</span>
+      </div>
+      <div class="lab-link">
+        Coming Soon <span class="arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Lab 5 Card B -->
+    <div class="lab-card coming-soon">
+      <div class="coming-soon-badge">IN PREPARATION</div>
+      <div class="lab-number">LAB 05 · PART B</div>
+      <div class="lab-title">Advanced Compression</div>
+      <div class="lab-desc">DCT-based compression, JPEG standard, and modern compression techniques with practical implementations.</div>
+      <div class="lab-topics">
+        <span class="topic-tag tag-gray">DCT</span>
+        <span class="topic-tag tag-gray">JPEG</span>
+        <span class="topic-tag tag-gray">Wavelets</span>
+      </div>
+      <div class="lab-link">
+        Coming Soon <span class="arrow">→</span>
+      </div>
+    </div>
   </div>
 
   <!-- Quick Reference Section -->
   <div class="section-header">
-    <span class="section-num">02</span>
+    <span class="section-num">03</span>
     <h2 class="section-title">Quick Reference</h2>
     <div class="accent-line"></div>
   </div>
@@ -431,10 +583,29 @@
     </div>
   </div>
 
+  <!-- Progress Tracker -->
+  <div style="background:linear-gradient(135deg, rgba(79,195,247,0.1), rgba(167,139,250,0.1)); border-radius:1rem; padding:1.5rem; margin:2rem 0; border:1px solid var(--border);">
+    <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+      <div style="font-family:'Fraunces',serif; font-size:1.2rem;">📊 Lab Progress</div>
+      <div style="flex:1; height:8px; background:var(--bg3); border-radius:1rem; overflow:hidden;">
+        <div style="width:40%; height:100%; background:linear-gradient(90deg, var(--accent), var(--accent3)); border-radius:1rem;"></div>
+      </div>
+      <div style="font-family:'Space Mono',monospace; color:var(--accent);">2/5 labs (40%)</div>
+    </div>
+    <div style="display:flex; justify-content:space-between; margin-top:0.5rem; font-size:0.75rem; color:var(--muted);">
+      <span>✅ Lab 1</span>
+      <span>✅ Lab 2</span>
+      <span>🔜 Lab 3</span>
+      <span>🔜 Lab 4</span>
+      <span>🔜 Lab 5</span>
+    </div>
+  </div>
+
   <!-- Footer -->
   <div class="footer">
     <p>ECE359 · Ain Shams University · Spring 2026</p>
     <p style="margin-top:0.5rem;">🔧 Maintained by TA: Adnan Zahran</p>
+    <p style="margin-top:0.5rem; font-size:0.6rem;">🚧 More labs are under construction — check back regularly for updates!</p>
   </div>
 
 </div>
