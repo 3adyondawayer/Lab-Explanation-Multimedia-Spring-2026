@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECE359 · Labs Index</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Fraunces:opsz,wght@9..144,300;9..144,600;9..144,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --bg2: #13161d;
+    --bg3: #1a1e28;
+    --card: #1e2330;
+    --border: #2a3045;
+    --accent: #4fc3f7;
+    --accent2: #f97316;
+    --accent3: #a78bfa;
+    --accent4: #34d399;
+    --text: #e2e8f0;
+    --muted: #7c8ba1;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #0d1520 0%, #0d0f14 50%, #130d1e 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 3.5rem 2rem 3rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(79,195,247,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-tag {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    border: 1px solid rgba(79,195,247,0.3);
+    padding: 0.3rem 0.9rem;
+    border-radius: 2rem;
+    margin-bottom: 1.2rem;
+    background: rgba(79,195,247,0.05);
+  }
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #e2e8f0, #4fc3f7 60%, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.6rem;
+  }
+  header .subtitle {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* ── CONTAINER ── */
+  .container { max-width: 1000px; margin: 0 auto; padding: 0 2rem 4rem; }
+
+  /* ── SECTION HEADERS ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 3rem 0 1.5rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+  }
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.55rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .accent-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+
+  /* ── LAB CARDS GRID ── */
+  .labs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .lab-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.8rem 1.5rem;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--text);
+    display: block;
+  }
+  .lab-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  }
+
+  .lab-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+  }
+
+  .lab-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.7rem;
+  }
+
+  .lab-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.8rem;
+    line-height: 1.2;
+  }
+
+  .lab-desc {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+
+  .lab-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .topic-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 0.2rem;
+    border: 1px solid;
+    letter-spacing: 0.05em;
+  }
+
+  .lab-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent2);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .lab-link .arrow {
+    transition: transform 0.2s;
+  }
+  .lab-card:hover .lab-link .arrow {
+    transform: translateX(4px);
+  }
+
+  /* Topic tag colors */
+  .tag-blue  { border-color: rgba(79,195,247,0.4); color: var(--accent);  background: rgba(79,195,247,0.07); }
+  .tag-orange{ border-color: rgba(249,115,22,0.4); color: var(--accent2); background: rgba(249,115,22,0.07); }
+  .tag-purple{ border-color: rgba(167,139,250,0.4);color: var(--accent3); background: rgba(167,139,250,0.07);}
+  .tag-green { border-color: rgba(52,211,153,0.4); color: var(--accent4); background: rgba(52,211,153,0.07); }
+  .tag-yellow{ border-color: rgba(251,191,36,0.4); color: var(--yellow);  background: rgba(251,191,36,0.07); }
+
+  /* Info Cards */
+  .info-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1.5rem 2rem;
+    margin: 2rem 0;
+  }
+
+  .info-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .quick-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  .quick-link {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 2rem;
+    padding: 0.5rem 1.2rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text);
+    text-decoration: none;
+    transition: border-color 0.2s;
+  }
+  .quick-link:hover {
+    border-color: var(--accent);
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  .pulse {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent4);
+    box-shadow: 0 0 0 0 rgba(52,211,153,0.4);
+    animation: pulse 2s infinite;
+    vertical-align: middle;
+    margin-right: 0.5rem;
+  }
+  @keyframes pulse {
+    0%  { box-shadow: 0 0 0 0 rgba(52,211,153,0.4); }
+    70% { box-shadow: 0 0 0 6px rgba(52,211,153,0); }
+    100%{ box-shadow: 0 0 0 0 rgba(52,211,153,0); }
+  }
+
+  @media (max-width: 640px) {
+    .section-title { font-size: 1.25rem; }
+    .container { padding: 0 1rem 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-tag">ECE359 · Spring 2026 · Ain Shams University</div>
+  <h1>Digital Image Processing</h1>
+  <h2>TA: Adnan Zahran</h2>
+  <p class="subtitle">Lab Materials & Resources · Communications Systems Engineering</p>
+</header>
+
+<div class="container">
+
+  <!-- Welcome Section -->
+  <div class="section-header" style="margin-top:2rem;">
+    <span class="section-num">00</span>
+    <h2 class="section-title">Welcome to the Lab</h2>
+    <div class="accent-line"></div>
+  </div>
+
+  <div class="info-card">
+    <div class="info-title">📋 Course Information</div>
+    <p style="margin-bottom:0.8rem;">Welcome to the ECE359 Digital Image Processing lab! This is your central hub for accessing all lab materials, explanations, and code examples. Each lab builds on the previous ones, so make sure you understand the fundamentals before moving on.</p>
+    <div class="quick-links">
+      <a href="#" class="quick-link">📚 Syllabus</a>
+      <a href="#" class="quick-link">📝 Assignments</a>
+      <a href="#" class="quick-link">💬 Discussions</a>
+      <a href="#" class="quick-link">📊 Grades</a>
+    </div>
+  </div>
+
+  <!-- Labs Section -->
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <h2 class="section-title">Lab Materials</h2>
+    <div class="accent-line"></div>
+  </div>
+
+  <div class="labs-grid">
+    
+    <!-- Lab 1 Card -->
+    <a href="lab1.html" class="lab-card">
+      <div class="lab-number">
+        <span class="pulse"></span>
+        LAB 01
+      </div>
+      <div class="lab-title">Fundamentals & Pointwise Operations</div>
+      <div class="lab-desc">Introduction to MATLAB image processing, data types, coordinate systems, and basic pointwise transformations including negative, power law, and logarithmic operations.</div>
+      <div class="lab-topics">
+        <span class="topic-tag tag-blue">MATLAB Basics</span>
+        <span class="topic-tag tag-orange">Pointwise Ops</span>
+        <span class="topic-tag tag-purple">Data Types</span>
+      </div>
+      <div class="lab-link">
+        Open Lab <span class="arrow">→</span>
+      </div>
+    </a>
+
+    <!-- Lab 2 Card -->
+    <a href="lab2.html" class="lab-card">
+      <div class="lab-number">
+        <span class="pulse"></span>
+        LAB 02
+      </div>
+      <div class="lab-title">Image Enhancement & Histograms</div>
+      <div class="lab-desc">Histogram analysis, equalization, matching techniques, and spatial filtering. Learn to enhance image contrast and apply smoothing/edge detection filters.</div>
+      <div class="lab-topics">
+        <span class="topic-tag tag-orange">Histograms</span>
+        <span class="topic-tag tag-green">Equalization</span>
+        <span class="topic-tag tag-purple">Spatial Filters</span>
+      </div>
+      <div class="lab-link">
+        Open Lab <span class="arrow">→</span>
+      </div>
+    </a>
+
+    <!-- Placeholder for future labs (commented out)
+    <a href="lab3.html" class="lab-card" style="opacity:0.8;">
+      <div class="lab-number">LAB 03</div>
+      <div class="lab-title">Frequency Domain Filtering</div>
+      <div class="lab-desc">Coming soon: Fourier transform, FFT, frequency domain filters, and applications.</div>
+      <div class="lab-topics">
+        <span class="topic-tag tag-purple">Fourier</span>
+        <span class="topic-tag tag-blue">FFT</span>
+        <span class="topic-tag tag-yellow">Filters</span>
+      </div>
+      <div class="lab-link">
+        Coming Soon <span class="arrow">→</span>
+      </div>
+    </a>
+    -->
+  </div>
+
+  <!-- Quick Reference Section -->
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <h2 class="section-title">Quick Reference</h2>
+    <div class="accent-line"></div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin:2rem 0;">
+    
+    <div style="background:var(--bg2); border:1px solid var(--border); border-radius:0.75rem; padding:1.2rem;">
+      <div style="font-family:'Space Mono',monospace; font-size:0.7rem; color:var(--accent); margin-bottom:0.5rem;">📌 ESSENTIAL FUNCTIONS</div>
+      <ul style="list-style:none; font-size:0.85rem;">
+        <li style="margin-bottom:0.3rem;"><code style="color:var(--accent2);">imread()</code> - read images</li>
+        <li style="margin-bottom:0.3rem;"><code style="color:var(--accent2);">imshow()</code> - display images</li>
+        <li style="margin-bottom:0.3rem;"><code style="color:var(--accent2);">im2double()</code> - convert to [0,1]</li>
+        <li style="margin-bottom:0.3rem;"><code style="color:var(--accent2);">rgb2gray()</code> - color to grayscale</li>
+      </ul>
+    </div>
+
+    <div style="background:var(--bg2); border:1px solid var(--border); border-radius:0.75rem; padding:1.2rem;">
+      <div style="font-family:'Space Mono',monospace; font-size:0.7rem; color:var(--accent2); margin-bottom:0.5rem;">📊 HISTOGRAM TOOLS</div>
+      <ul style="list-style:none; font-size:0.85rem;">
+        <li style="margin-bottom:0.3rem;"><code style="color:var(--accent2);">imhist()</code> - compute histogram</li>
+        <li style="margin-bottom:0.3rem;"><code style="color:var(--accent2);">histeq()</code> - equalize/match</li>
+        <li style="margin-bottom:0.3rem;"><code style="color:var(--accent2);">cumsum()</code> - CDF computation</li>
+        <li style="margin-bottom:0.3rem;"><code style="color:var(--accent2);">bar()</code> - plot histogram</li>
+      </ul>
+    </div>
+
+    <div style="background:var(--bg2); border:1px solid var(--border); border-radius:0.75rem; padding:1.2rem;">
+      <div style="font-family:'Space Mono',monospace; font-size:0.7rem; color:var(--accent3); margin-bottom:0.5rem;">🔍 FILTERING</div>
+      <ul style="list-style:none; font-size:0.85rem;">
+        <li style="margin-bottom:0.3rem;"><code style="color:var(--accent2);">imfilter()</code> - apply filter</li>
+        <li style="margin-bottom:0.3rem;"><code style="color:var(--accent2);">fspecial()</code> - create kernels</li>
+        <li style="margin-bottom:0.3rem;"><code style="color:var(--accent2);">ones()/zeros()</code> - manual kernels</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="info-card">
+    <div class="info-title">⚠️ Quick Reminders</div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
+      <div style="border-left:2px solid var(--accent2); padding-left:0.8rem;">
+        <span style="color:var(--accent2); font-weight:bold;">imshow(I, [])</span>
+        <p style="font-size:0.8rem;">Auto-scales display — use when unsure of range!</p>
+      </div>
+      <div style="border-left:2px solid var(--accent3); padding-left:0.8rem;">
+        <span style="color:var(--accent3); font-weight:bold;">double() vs im2double()</span>
+        <p style="font-size:0.8rem;">double() keeps [0,255], im2double() normalizes to [0,1]</p>
+      </div>
+      <div style="border-left:2px solid var(--accent4); padding-left:0.8rem;">
+        <span style="color:var(--accent4); font-weight:bold;">Filter normalization</span>
+        <p style="font-size:0.8rem;">Always divide filter by sum of coefficients!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>ECE359 · Ain Shams University · Spring 2026</p>
+    <p style="margin-top:0.5rem;">🔧 Maintained by TA: Adnan Zahran</p>
+  </div>
+
+</div>
+</body>
+</html>
