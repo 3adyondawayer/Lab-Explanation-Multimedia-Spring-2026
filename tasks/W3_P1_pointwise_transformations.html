@@ -1,0 +1,1638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pointwise Intensity Transformations — ECE359</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Fira+Code:wght@400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #080c14;
+  --bg1:     #0d1220;
+  --bg2:     #111827;
+  --bg3:     #1a2235;
+  --border:  #1e2d47;
+  --border2: #253550;
+  --green:   #22d3a0;
+  --green2:  #0f7a5a;
+  --amber:   #f59e0b;
+  --amber2:  #92600a;
+  --blue:    #60a5fa;
+  --red:     #f87171;
+  --purple:  #c084fc;
+  --text:    #c8d8f0;
+  --text-dim:#5a7090;
+  --text-br: #e8f0ff;
+  --code-bg: #060a10;
+  --kw:      #f59e0b;   /* keywords */
+  --fn:      #60a5fa;   /* functions */
+  --str:     #22d3a0;   /* strings */
+  --num:     #f87171;   /* numbers */
+  --cmt:     #3a5070;   /* comments */
+  --var:     #c084fc;   /* variables */
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body {
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Crimson Pro',Georgia,serif;
+  font-size:16px; line-height:1.75;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* Scanline texture */
+body::before {
+  content:'';
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);
+}
+
+/* ── HEADER ── */
+header {
+  position:relative; overflow:hidden;
+  padding:40px 48px 32px;
+  background:linear-gradient(160deg,#0d1a30 0%,#080c14 60%);
+  border-bottom:1px solid var(--border);
+}
+header::after {
+  content:'';
+  position:absolute; right:-80px; top:-80px;
+  width:400px; height:400px; border-radius:50%;
+  background:radial-gradient(circle,rgba(34,211,160,0.07) 0%,transparent 70%);
+  pointer-events:none;
+}
+.header-tag {
+  font-family:'Fira Code',monospace; font-size:11px; color:var(--green);
+  letter-spacing:2px; text-transform:uppercase;
+  background:rgba(34,211,160,0.08); border:1px solid rgba(34,211,160,0.2);
+  display:inline-block; padding:3px 12px; border-radius:3px; margin-bottom:14px;
+}
+header h1 {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:52px; letter-spacing:2px; color:var(--text-br);
+  line-height:1; margin-bottom:6px;
+}
+header h1 em { color:var(--green); font-style:normal; }
+header p { color:var(--text-dim); font-size:14px; font-style:italic; }
+
+/* ── NAV SIDEBAR ── */
+.layout { display:flex; min-height:calc(100vh - 160px); position:relative; z-index:1; }
+
+.sidebar {
+  width:220px; flex-shrink:0;
+  background:var(--bg1);
+  border-right:1px solid var(--border);
+  padding:24px 0; position:sticky; top:0; height:100vh;
+  overflow-y:auto;
+}
+.sidebar-label {
+  font-family:'Fira Code',monospace; font-size:10px; color:var(--text-dim);
+  letter-spacing:2px; text-transform:uppercase; padding:0 20px; margin-bottom:12px;
+}
+.nav-item {
+  display:flex; align-items:center; gap:12px;
+  padding:11px 20px; cursor:pointer;
+  border-left:3px solid transparent;
+  transition:all 0.18s; color:var(--text-dim);
+  font-size:14px;
+}
+.nav-item:hover { color:var(--text); background:rgba(255,255,255,0.03); }
+.nav-item.active {
+  color:var(--green); border-left-color:var(--green);
+  background:rgba(34,211,160,0.05);
+}
+.nav-icon { font-size:16px; width:20px; text-align:center; flex-shrink:0; }
+.nav-badge {
+  margin-left:auto; font-family:'Fira Code',monospace; font-size:10px;
+  background:var(--bg3); color:var(--text-dim); padding:2px 7px; border-radius:99px;
+}
+
+/* ── MAIN CONTENT ── */
+.content { flex:1; padding:36px 44px; max-width:1100px; }
+.panel { display:none; animation:fadeIn 0.25s ease; }
+.panel.active { display:block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+
+/* ── SECTION HEADING ── */
+.section-head {
+  display:flex; align-items:flex-start; gap:20px;
+  margin-bottom:28px; padding-bottom:20px;
+  border-bottom:1px solid var(--border);
+}
+.section-icon {
+  width:56px; height:56px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; flex-shrink:0;
+}
+.icon-neg  { background:rgba(248,113,113,0.12); border:1px solid rgba(248,113,113,0.25); }
+.icon-log  { background:rgba(96,165,250,0.12);  border:1px solid rgba(96,165,250,0.25);  }
+.icon-gam  { background:rgba(245,158,11,0.12);  border:1px solid rgba(245,158,11,0.25);  }
+.icon-cs   { background:rgba(34,211,160,0.12);  border:1px solid rgba(34,211,160,0.25);  }
+.icon-thr  { background:rgba(192,132,252,0.12); border:1px solid rgba(192,132,252,0.25); }
+.section-title h2 {
+  font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:1px;
+  color:var(--text-br); margin-bottom:4px;
+}
+.section-title p { font-size:14.5px; color:var(--text-dim); font-style:italic; }
+
+/* ── CARDS ── */
+.card {
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:10px; padding:22px 26px; margin-bottom:20px;
+}
+.card-title {
+  font-family:'Fira Code',monospace; font-size:12px; color:var(--text-dim);
+  letter-spacing:1px; text-transform:uppercase; margin-bottom:14px;
+  display:flex; align-items:center; gap:8px;
+}
+.card-title::before { content:''; display:block; width:14px; height:2px; background:var(--green); }
+
+/* ── FORMULA ── */
+.formula-block {
+  background:var(--code-bg); border:1px solid var(--border);
+  border-left:3px solid var(--amber); border-radius:0 8px 8px 0;
+  padding:16px 20px; margin:14px 0;
+  font-family:'Fira Code',monospace; font-size:14px;
+  color:#e8e0c8; overflow-x:auto; line-height:2;
+}
+.formula-block .fl { color:var(--text-dim); font-size:11px; display:block; margin-bottom:4px; }
+.formula-block .fhi { color:var(--amber); font-weight:600; }
+.formula-block .fval { color:var(--green); }
+.formula-block .fdim { color:var(--text-dim); }
+
+/* ── CODE BLOCK ── */
+.code-wrap {
+  background:var(--code-bg); border:1px solid var(--border2);
+  border-radius:10px; overflow:hidden; margin:16px 0;
+  box-shadow:0 4px 24px rgba(0,0,0,0.4);
+}
+.code-header {
+  background:#0d1524; border-bottom:1px solid var(--border);
+  padding:10px 18px; display:flex; align-items:center; gap:10px;
+}
+.code-dots { display:flex; gap:6px; }
+.code-dot {
+  width:11px; height:11px; border-radius:50%;
+}
+.code-dot:nth-child(1){background:#f87171;}
+.code-dot:nth-child(2){background:#f59e0b;}
+.code-dot:nth-child(3){background:#22d3a0;}
+.code-lang {
+  font-family:'Fira Code',monospace; font-size:11px; color:var(--text-dim);
+  margin-left:auto; letter-spacing:1px; text-transform:uppercase;
+}
+.code-copy {
+  font-family:'Fira Code',monospace; font-size:10px;
+  color:var(--text-dim); background:var(--bg3); border:1px solid var(--border);
+  border-radius:4px; padding:3px 10px; cursor:pointer; transition:all 0.15s;
+}
+.code-copy:hover { color:var(--green); border-color:var(--green2); }
+pre {
+  padding:20px 22px; overflow-x:auto;
+  font-family:'Fira Code',monospace; font-size:13px; line-height:1.9;
+  color:#c8d8f0;
+}
+pre .kw  { color:var(--kw);  font-weight:600; }
+pre .fn  { color:var(--fn);  }
+pre .str { color:var(--str); }
+pre .num { color:var(--num); }
+pre .cmt { color:var(--cmt); font-style:italic; }
+pre .var { color:var(--var); }
+pre .op  { color:#94a3b8; }
+pre .pct { color:#e2e8f0; }
+
+/* ── INTERACTIVE AREA ── */
+.interactive-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:20px 0; }
+@media(max-width:880px){.interactive-grid{grid-template-columns:1fr;}}
+
+/* Transfer curve canvas */
+.curve-wrap {
+  background:var(--code-bg); border:1px solid var(--border2);
+  border-radius:10px; padding:16px; position:relative;
+}
+.curve-label {
+  font-family:'Fira Code',monospace; font-size:11px; color:var(--text-dim);
+  text-align:center; margin-top:10px;
+}
+
+/* Image canvas area */
+.img-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.img-box {
+  background:var(--bg3); border:1px solid var(--border);
+  border-radius:8px; overflow:hidden; text-align:center;
+}
+.img-box canvas { display:block; width:100%; }
+.img-box-label {
+  font-family:'Fira Code',monospace; font-size:10px; color:var(--text-dim);
+  padding:6px; background:var(--code-bg); border-top:1px solid var(--border);
+}
+
+/* Sliders */
+.param-area { display:flex; flex-direction:column; gap:12px; }
+.param-row { }
+.param-row label {
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:'Fira Code',monospace; font-size:12px; color:var(--text-dim);
+  margin-bottom:6px;
+}
+.param-row label .val { color:var(--green); font-weight:600; font-size:13px; }
+.param-row input[type=range] {
+  width:100%; height:5px; border-radius:3px;
+  accent-color:var(--green); background:var(--bg3); outline:none;
+}
+
+/* Info box */
+.info { padding:14px 18px; border-radius:8px; margin:14px 0; font-size:14.5px; }
+.info-amber { background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); }
+.info-green { background:rgba(34,211,160,0.08); border:1px solid rgba(34,211,160,0.25); }
+.info-red   { background:rgba(248,113,113,0.08); border:1px solid rgba(248,113,113,0.25); }
+.info-blue  { background:rgba(96,165,250,0.08);  border:1px solid rgba(96,165,250,0.25);  }
+.info-purple{ background:rgba(192,132,252,0.08); border:1px solid rgba(192,132,252,0.25); }
+.info strong { color:var(--amber); }
+.info-green strong { color:var(--green); }
+.info-red   strong { color:var(--red); }
+.info-blue  strong { color:var(--blue); }
+.info-purple strong { color:var(--purple); }
+
+/* Comparison strip */
+.cmp-strip {
+  display:flex; gap:2px; border-radius:8px; overflow:hidden;
+  border:1px solid var(--border); margin:16px 0;
+}
+.cmp-strip canvas { flex:1; display:block; }
+
+/* Annotation pills */
+.pill-row { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0; }
+.pill {
+  font-family:'Fira Code',monospace; font-size:11px; padding:3px 12px;
+  border-radius:99px; display:inline-block;
+}
+.p-amber { background:rgba(245,158,11,0.12); color:var(--amber); border:1px solid rgba(245,158,11,0.3); }
+.p-green { background:rgba(34,211,160,0.12); color:var(--green); border:1px solid rgba(34,211,160,0.3); }
+.p-blue  { background:rgba(96,165,250,0.12);  color:var(--blue);  border:1px solid rgba(96,165,250,0.3);  }
+.p-red   { background:rgba(248,113,113,0.12); color:var(--red);   border:1px solid rgba(248,113,113,0.3); }
+.p-purple{ background:rgba(192,132,252,0.12); color:var(--purple);border:1px solid rgba(192,132,252,0.3); }
+
+/* Table */
+table { width:100%; border-collapse:collapse; font-family:'Fira Code',monospace; font-size:12px; margin:12px 0; }
+th { background:var(--bg3); color:var(--amber); padding:8px 12px; border:1px solid var(--border); text-align:center; }
+td { padding:7px 12px; border:1px solid var(--border); text-align:center; color:var(--text); }
+td.g { color:var(--green); } td.r { color:var(--red); } td.b { color:var(--blue); }
+
+/* Gamma curve overlay buttons */
+.curve-overlay-btns {
+  display:flex; gap:6px; flex-wrap:wrap; margin:10px 0;
+}
+.cob { font-family:'Fira Code',monospace; font-size:11px; padding:5px 14px;
+  border-radius:5px; border:1px solid var(--border); background:var(--bg3);
+  color:var(--text-dim); cursor:pointer; transition:all 0.15s; }
+.cob:hover { color:var(--text); border-color:var(--border2); }
+.cob.active-amber { border-color:var(--amber); color:var(--amber); background:rgba(245,158,11,0.08); }
+.cob.active-green { border-color:var(--green); color:var(--green); background:rgba(34,211,160,0.08); }
+.cob.active-blue  { border-color:var(--blue);  color:var(--blue);  background:rgba(96,165,250,0.08);  }
+.cob.active-red   { border-color:var(--red);   color:var(--red);   background:rgba(248,113,113,0.08); }
+
+/* Overview cards */
+.ov-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:14px; margin-bottom:28px; }
+.ov-card {
+  background:var(--bg2); border:1px solid var(--border); border-radius:10px;
+  padding:18px; cursor:pointer; transition:all 0.2s;
+  position:relative; overflow:hidden;
+}
+.ov-card:hover { border-color:var(--border2); transform:translateY(-2px); }
+.ov-card .ov-icon { font-size:24px; margin-bottom:10px; }
+.ov-card h3 { font-family:'Bebas Neue',monospace; font-size:18px; color:var(--text-br); letter-spacing:0.5px; margin-bottom:4px; }
+.ov-card p { font-size:12.5px; color:var(--text-dim); }
+.ov-card .ov-formula { font-family:'Fira Code',monospace; font-size:11px; margin-top:10px; padding:6px 10px; background:var(--code-bg); border-radius:5px; }
+.ov-card-glow { position:absolute; top:0; right:0; width:80px; height:80px; border-radius:50%; opacity:0.06; }
+
+/* Contrast stretching control points */
+.cs-point { cursor:grab; }
+
+/* Segmented hint */
+.hint-steps { display:flex; gap:0; margin:14px 0; }
+.hint-step {
+  flex:1; padding:12px 10px; text-align:center; font-size:12.5px;
+  background:var(--bg3); border:1px solid var(--border);
+}
+.hint-step:first-child { border-radius:8px 0 0 8px; }
+.hint-step:last-child  { border-radius:0 8px 8px 0; }
+.hint-step strong { display:block; font-family:'Fira Code',monospace; font-size:11px; margin-bottom:3px; }
+
+/* Sep */
+.sep { height:1px; background:var(--border); margin:24px 0; }
+
+/* Bit-depth selector */
+.bitdepth-row { display:flex; gap:8px; margin:10px 0; }
+.bdbtn {
+  font-family:'Fira Code',monospace; font-size:11px; padding:5px 14px;
+  border-radius:5px; border:1px solid var(--border); background:var(--bg3);
+  color:var(--text-dim); cursor:pointer; transition:all 0.15s;
+}
+.bdbtn.active { border-color:var(--green); color:var(--green); background:rgba(34,211,160,0.08); }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-tag">Digital Image Processing · Gonzalez & Woods</div>
+  <h1>Pointwise Intensity <em>Transformations</em></h1>
+  <p>s = T(r) · Interactive exploration of spatial domain enhancement — no neighborhood required</p>
+</header>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-label">Transforms</div>
+  <div class="nav-item active" onclick="showPanel('overview')">
+    <span class="nav-icon">🗺</span> Overview
+  </div>
+  <div class="nav-item" onclick="showPanel('negative')">
+    <span class="nav-icon">🔄</span> Negative
+    <span class="nav-badge">L−1−r</span>
+  </div>
+  <div class="nav-item" onclick="showPanel('log')">
+    <span class="nav-icon">📈</span> Log Transform
+    <span class="nav-badge">log</span>
+  </div>
+  <div class="nav-item" onclick="showPanel('gamma')">
+    <span class="nav-icon">γ</span> Gamma / Power-Law
+    <span class="nav-badge">rᵞ</span>
+  </div>
+  <div class="nav-item" onclick="showPanel('contrast')">
+    <span class="nav-icon">⇅</span> Contrast Stretch
+    <span class="nav-badge">linear</span>
+  </div>
+  <div class="nav-item" onclick="showPanel('threshold')">
+    <span class="nav-icon">▌</span> Thresholding
+    <span class="nav-badge">binary</span>
+  </div>
+</nav>
+
+<!-- CONTENT -->
+<main class="content" id="content-main">
+
+<!-- ═══════════════════════ OVERVIEW ═══════════════════════ -->
+<div class="panel active" id="panel-overview">
+  <div class="section-head">
+    <div class="section-icon" style="background:rgba(34,211,160,0.1);border:1px solid rgba(34,211,160,0.2)">🗺</div>
+    <div class="section-title">
+      <h2>Pointwise Transformations</h2>
+      <p>Each output pixel depends only on the corresponding input pixel — no neighbors involved</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">General Form</div>
+    <div class="formula-block">
+      <span class="fl">The fundamental relation (Gonzalez §3.2)</span>
+      <span class="fhi">s = T(r)</span><br>
+      <span class="fdim">r</span> = input intensity &nbsp;&nbsp; <span class="fdim">s</span> = output intensity &nbsp;&nbsp; <span class="fdim">T</span> = transformation function<br>
+      r, s <span class="fdim">∈</span> [0, L−1] &nbsp;&nbsp; (L = 256 for 8-bit images)
+    </div>
+    <p style="font-size:14.5px">These are <em>intensity mappings</em> — the spatial position of the pixel never matters, only its grey level. They are computed once per unique intensity level (only 256 lookups for 8-bit), making them extremely fast via a <strong>lookup table (LUT)</strong>.</p>
+  </div>
+
+  <div class="ov-grid">
+    <div class="ov-card" onclick="showPanel('negative')" style="border-top:3px solid var(--red)">
+      <div class="ov-card-glow" style="background:var(--red)"></div>
+      <div class="ov-icon">🔄</div>
+      <h3>Negative</h3>
+      <p>Invert intensities. Dark → bright</p>
+      <div class="ov-formula" style="color:var(--red)">s = (L−1) − r</div>
+    </div>
+    <div class="ov-card" onclick="showPanel('log')" style="border-top:3px solid var(--blue)">
+      <div class="ov-card-glow" style="background:var(--blue)"></div>
+      <div class="ov-icon">📈</div>
+      <h3>Log Transform</h3>
+      <p>Expand dark, compress bright</p>
+      <div class="ov-formula" style="color:var(--blue)">s = c·log(1+r)</div>
+    </div>
+    <div class="ov-card" onclick="showPanel('gamma')" style="border-top:3px solid var(--amber)">
+      <div class="ov-card-glow" style="background:var(--amber)"></div>
+      <div class="ov-icon">γ</div>
+      <h3>Gamma / Power-Law</h3>
+      <p>Controls contrast by exponent</p>
+      <div class="ov-formula" style="color:var(--amber)">s = c·rᵞ</div>
+    </div>
+    <div class="ov-card" onclick="showPanel('contrast')" style="border-top:3px solid var(--green)">
+      <div class="ov-card-glow" style="background:var(--green)"></div>
+      <div class="ov-icon">⇅</div>
+      <h3>Contrast Stretching</h3>
+      <p>Piecewise linear expansion</p>
+      <div class="ov-formula" style="color:var(--green)">piecewise T(r)</div>
+    </div>
+    <div class="ov-card" onclick="showPanel('threshold')" style="border-top:3px solid var(--purple)">
+      <div class="ov-card-glow" style="background:var(--purple)"></div>
+      <div class="ov-icon">▌</div>
+      <h3>Thresholding</h3>
+      <p>Binary segmentation by level</p>
+      <div class="ov-formula" style="color:var(--purple)">s = 0 or L−1</div>
+    </div>
+  </div>
+
+  <!-- LUT concept -->
+  <div class="card">
+    <div class="card-title">Lookup Table (LUT) — Making Transformations Fast</div>
+    <div class="interactive-grid" style="align-items:start">
+      <div>
+        <p style="font-size:14.5px">Instead of evaluating T(r) for every pixel, we precompute the entire mapping once into an array of 256 values. Then for each pixel we just do an array lookup — O(1) per pixel.</p>
+        <div class="formula-block" style="margin-top:14px">
+          <span class="fl">LUT precomputation</span>
+          LUT = <span class="fhi">zeros</span>(1, 256)<br>
+          <span class="fval">for</span> r = 0 : 255<br>
+          &nbsp;&nbsp;LUT(r+1) = <span class="fhi">T</span>(r) &nbsp;<span class="fdim">% any formula</span><br>
+          <span class="fval">end</span><br>
+          <br>
+          <span class="fl">Application (entire image at once)</span>
+          output = LUT(input + 1) &nbsp;<span class="fdim">% MATLAB indexing</span>
+        </div>
+      </div>
+      <div>
+        <div class="curve-wrap"><canvas id="ov-lut-canvas" width="320" height="220"></canvas></div>
+        <div class="curve-label">Identity LUT (select a transform above to see its curve)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ NEGATIVE ═══════════════════════ -->
+<div class="panel" id="panel-negative">
+  <div class="section-head">
+    <div class="section-icon icon-neg">🔄</div>
+    <div class="section-title">
+      <h2>Image Negative</h2>
+      <p>The simplest reversal — maps each intensity to its complement</p>
+    </div>
+  </div>
+
+  <div class="pill-row">
+    <span class="pill p-red">Monotonically Decreasing</span>
+    <span class="pill p-amber">Invertible</span>
+    <span class="pill p-green">No Parameters</span>
+  </div>
+
+  <div class="formula-block">
+    <span class="fl">Negative Transform</span>
+    <span class="fhi">s = (L − 1) − r</span><br>
+    <span class="fdim">For 8-bit: L = 256, so s = 255 − r</span><br>
+    <span class="fdim">r = 0 → s = 255 &nbsp;|&nbsp; r = 128 → s = 127 &nbsp;|&nbsp; r = 255 → s = 0</span>
+  </div>
+
+  <div class="info info-red">
+    <strong>When to use:</strong> Medical imaging (e.g. mammography X-rays), enhancing white/light detail on dark backgrounds. The negative is often easier to analyse visually than the original.
+  </div>
+
+  <div class="interactive-grid">
+    <div>
+      <div class="curve-wrap"><canvas id="neg-curve" width="300" height="240"></canvas></div>
+      <div class="curve-label">Transfer curve s = 255 − r</div>
+    </div>
+    <div>
+      <div class="img-grid">
+        <div class="img-box">
+          <canvas id="neg-in" width="200" height="160"></canvas>
+          <div class="img-box-label">Input image</div>
+        </div>
+        <div class="img-box">
+          <canvas id="neg-out" width="200" height="160"></canvas>
+          <div class="img-box-label">Negative output</div>
+        </div>
+      </div>
+      <div class="param-area" style="margin-top:14px">
+        <div class="card-title">Test Image</div>
+        <div class="curve-overlay-btns">
+          <button class="cob" onclick="setTestImage('gradient','neg')">Gradient</button>
+          <button class="cob" onclick="setTestImage('circles','neg')">Circles</button>
+          <button class="cob" onclick="setTestImage('noise','neg')">Noisy</button>
+          <button class="cob" onclick="setTestImage('dark','neg')">Dark Scene</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">MATLAB Implementation</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div></div>
+        <span class="code-lang">MATLAB</span>
+        <button class="code-copy" onclick="copyCode('neg-code')">copy</button>
+      </div>
+      <pre id="neg-code"><span class="cmt">%% Image Negative Transform</span>
+<span class="cmt">% Works for any bit depth — just change 255 to (2^bits - 1)</span>
+
+<span class="var">f</span> <span class="op">=</span> <span class="fn">imread</span>(<span class="str">'input.png'</span>);      <span class="cmt">% Read image</span>
+<span class="var">f</span> <span class="op">=</span> <span class="fn">im2double</span>(<span class="var">f</span>);          <span class="cmt">% Convert to [0,1] range</span>
+
+<span class="cmt">% Method 1: Direct formula</span>
+<span class="var">g</span> <span class="op">=</span> <span class="num">1</span> <span class="op">-</span> <span class="var">f</span>;                  <span class="cmt">% s = 1 - r  (normalized)</span>
+
+<span class="cmt">% Method 2: Integer arithmetic (8-bit)</span>
+<span class="var">f8</span> <span class="op">=</span> <span class="fn">im2uint8</span>(<span class="var">f</span>);
+<span class="var">g8</span> <span class="op">=</span> <span class="num">255</span> <span class="op">-</span> <span class="var">f8</span>;              <span class="cmt">% s = 255 - r</span>
+
+<span class="cmt">% Method 3: Built-in (recommended)</span>
+<span class="var">g</span>  <span class="op">=</span> <span class="fn">imcomplement</span>(<span class="var">f</span>);      <span class="cmt">% Works for any type</span>
+
+<span class="cmt">% Display side by side</span>
+<span class="fn">figure</span>; <span class="fn">subplot</span>(<span class="num">1</span>,<span class="num">2</span>,<span class="num">1</span>); <span class="fn">imshow</span>(<span class="var">f</span>); <span class="fn">title</span>(<span class="str">'Original'</span>);
+        <span class="fn">subplot</span>(<span class="num">1</span>,<span class="num">2</span>,<span class="num">2</span>); <span class="fn">imshow</span>(<span class="var">g</span>); <span class="fn">title</span>(<span class="str">'Negative'</span>);</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Key Properties</div>
+    <table>
+      <tr><th>Property</th><th>Value</th><th>Implication</th></tr>
+      <tr><td>Monotonicity</td><td class="r">Decreasing</td><td>Bright → Dark and vice versa</td></tr>
+      <tr><td>Invertible?</td><td class="g">Yes</td><td>Applying twice returns original</td></tr>
+      <tr><td>Parameters</td><td class="g">None</td><td>Completely determined by L</td></tr>
+      <tr><td>Contrast change</td><td>None</td><td>Only polarity is flipped</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════ LOG ═══════════════════════ -->
+<div class="panel" id="panel-log">
+  <div class="section-head">
+    <div class="section-icon icon-log">📈</div>
+    <div class="section-title">
+      <h2>Log Transform</h2>
+      <p>Expand low intensities, compress high intensities — perfect for Fourier spectrum display</p>
+    </div>
+  </div>
+
+  <div class="pill-row">
+    <span class="pill p-blue">Nonlinear</span>
+    <span class="pill p-green">Monotonically Increasing</span>
+    <span class="pill p-amber">Expands Darks</span>
+    <span class="pill p-red">Compresses Brights</span>
+  </div>
+
+  <div class="formula-block">
+    <span class="fl">Log Transform</span>
+    <span class="fhi">s = c · log(1 + r)</span><br>
+    <span class="fdim">c = scaling constant &nbsp;|&nbsp; +1 avoids log(0) = −∞</span><br>
+    <span class="fdim">To normalize output to [0,L−1]: c = (L−1) / log(1 + r_max)</span>
+  </div>
+
+  <div class="interactive-grid">
+    <div>
+      <div class="param-area">
+        <div class="card-title">Parameters</div>
+        <div class="param-row">
+          <label>Constant c: <span class="val" id="log-c-val">1.00</span></label>
+          <input type="range" min="0.1" max="5" step="0.05" value="1" id="log-c" oninput="updateLog()">
+        </div>
+        <div class="param-row" style="margin-top:8px">
+          <label style="font-size:11px; color:var(--text-dim)">Base: </label>
+          <div class="bitdepth-row">
+            <button class="bdbtn active" id="logbase-n" onclick="setLogBase('natural')">ln (natural)</button>
+            <button class="bdbtn" id="logbase-10" onclick="setLogBase('10')">log₁₀</button>
+            <button class="bdbtn" id="logbase-2" onclick="setLogBase('2')">log₂</button>
+          </div>
+        </div>
+      </div>
+      <div class="curve-wrap" style="margin-top:14px">
+        <canvas id="log-curve" width="300" height="220"></canvas>
+      </div>
+      <div class="curve-label">Transfer curve s = c·log(1+r)</div>
+    </div>
+    <div>
+      <div class="img-grid">
+        <div class="img-box">
+          <canvas id="log-in" width="200" height="160"></canvas>
+          <div class="img-box-label">Input image</div>
+        </div>
+        <div class="img-box">
+          <canvas id="log-out" width="200" height="160"></canvas>
+          <div class="img-box-label">Log-transformed output</div>
+        </div>
+      </div>
+      <div class="curve-overlay-btns" style="margin-top:10px">
+        <button class="cob" onclick="setTestImage('dark','log')">Dark Scene</button>
+        <button class="cob" onclick="setTestImage('fft','log')">FFT Spectrum</button>
+        <button class="cob" onclick="setTestImage('gradient','log')">Gradient</button>
+      </div>
+      <div class="info info-blue" style="margin-top:12px">
+        <strong>Classic use:</strong> Displaying Fourier transform spectra. The DFT magnitude spans many orders of magnitude — log compresses it to a visible range.
+      </div>
+    </div>
+  </div>
+
+<div class="card">
+    <div class="card-title">MATLAB Implementation</div>
+    <div class="code-wrap">
+        <div class="code-header">
+            <div class="code-dots"><div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div></div>
+            <span class="code-lang">MATLAB</span>
+            <button class="code-copy" onclick="copyCode('log-code')">copy</button>
+        </div>
+        <pre id="log-code"><span class="cmt">%% Log Transform  s = c * log(1 + r)</span>
+
+<span class="var">f</span>  <span class="op">=</span> <span class="fn">im2double</span>(<span class="fn">imread</span>(<span class="str">'input.png'</span>));
+
+<span class="cmt">% Auto-scale (optional)c so output fills [0,1]</span>
+<span class="var">c</span>  <span class="op">=</span> <span class="num">1</span> <span class="op">/</span> <span class="fn">log</span>(<span class="num">1</span> <span class="op">+</span> <span class="fn">max</span>(<span class="var">f</span>(:)));
+<span class="var">g</span>  <span class="op">=</span> <span class="var">c</span> <span class="op">.*</span> <span class="fn">log</span>(<span class="num">1</span> <span class="op">+</span> <span class="var">f</span>);           <span class="cmt">% Elementwise log</span>
+<span class="cmt">% One can use uint8 but with </span>
+<span class="fn">imshow</span>(<span class="var">S</span>,[]);                   <span class="cmt">% [] = auto-scale display</span>
+
+<span class="cmt">% ── Log₁₀ variant ──</span>
+<span class="var">g10</span> <span class="op">=</span> <span class="fn">log10</span>(<span class="num">1</span> <span class="op">+</span> <span class="var">f</span>);
+<span class="var">g10</span> <span class="op">=</span> <span class="var">g10</span> <span class="op">/</span> <span class="fn">max</span>(<span class="var">g10</span>(:));       <span class="cmt">% Normalise to [0,1]</span>
+
+<span class="cmt">% ── for uint8 ──</span>
+<span class="var">f</span> <span class="op">=</span> <span class="fn">double</span>(<span class="fn">imread</span>(<span class="str">'input.png'</span>));
+<span class="var">g</span> <span class="op">=</span> <span class="fn">uint8</span>(<span class="num">255</span> <span class="op">*</span> (<span class="fn">log</span>(<span class="num">1</span> <span class="op">+</span> <span class="var">f</span>) <span class="op">/</span> <span class="fn">max</span>(<span class="fn">log</span>(<span class="num">1</span> <span class="op">+</span> <span class="var">f</span>(:)))));
+<span class="fn">imshow</span>(<span class="var">g</span>);</pre>
+    </div>
+</div>
+</div>
+
+<!-- ═══════════════════════ GAMMA ═══════════════════════ -->
+<div class="panel" id="panel-gamma">
+  <div class="section-head">
+    <div class="section-icon icon-gam">γ</div>
+    <div class="section-title">
+      <h2>Gamma / Power-Law Transform</h2>
+      <p>The workhorse of intensity mapping — gamma controls the shape of the curve</p>
+    </div>
+  </div>
+
+  <div class="pill-row">
+    <span class="pill p-amber">γ &lt; 1 → Expands darks</span>
+    <span class="pill p-green">γ = 1 → Identity</span>
+    <span class="pill p-red">γ &gt; 1 → Expands brights</span>
+    <span class="pill p-blue">Gamma Correction</span>
+  </div>
+
+  <div class="formula-block">
+    <span class="fl">Power-Law (Gamma) Transform</span>
+    <span class="fhi">s = c · r<sup>γ</sup></span><br>
+    <span class="fdim">c = scaling constant (usually c = 1 after normalization)</span><br>
+    <span class="fdim">γ (gamma) = exponent controlling curve shape</span><br>
+    <span class="fdim">r ∈ [0,1] (normalize first!) &nbsp;|&nbsp; γ = 1/2.2 for sRGB monitor correction</span>
+  </div>
+
+  <div class="interactive-grid">
+    <div>
+      <div class="param-area">
+        <div class="card-title">Parameters</div>
+        <div class="param-row">
+          <label>γ (gamma): <span class="val" id="gam-val">1.00</span></label>
+          <input type="range" min="0.04" max="5" step="0.02" value="1" id="gam-slider" oninput="updateGamma()">
+        </div>
+        <div class="param-row">
+          <label>c (scale): <span class="val" id="gamc-val">1.00</span></label>
+          <input type="range" min="0.2" max="2" step="0.05" value="1" id="gamc-slider" oninput="updateGamma()">
+        </div>
+      </div>
+      <div class="curve-wrap" style="margin-top:14px">
+        <canvas id="gam-curve" width="300" height="220"></canvas>
+      </div>
+      <div class="curve-label" id="gam-curve-label">s = 1.00 · r¹·⁰⁰</div>
+      <div class="card-title" style="margin-top:14px">Overlay Multiple γ</div>
+      <div class="curve-overlay-btns">
+        <button class="cob" id="gov-025" onclick="gammaOverlay(0.25)">γ=0.25</button>
+        <button class="cob" id="gov-05"  onclick="gammaOverlay(0.5)">γ=0.5</button>
+        <button class="cob" id="gov-1"   onclick="gammaOverlay(1.0)">γ=1 (identity)</button>
+        <button class="cob" id="gov-2"   onclick="gammaOverlay(2.0)">γ=2</button>
+        <button class="cob" id="gov-4"   onclick="gammaOverlay(4.0)">γ=4</button>
+      </div>
+    </div>
+    <div>
+      <div class="img-grid">
+        <div class="img-box">
+          <canvas id="gam-in" width="200" height="160"></canvas>
+          <div class="img-box-label">Input image</div>
+        </div>
+        <div class="img-box">
+          <canvas id="gam-out" width="200" height="160"></canvas>
+          <div class="img-box-label" id="gam-out-label">Output (γ=1.00)</div>
+        </div>
+      </div>
+      <div class="curve-overlay-btns" style="margin-top:10px">
+        <button class="cob" onclick="setTestImage('gradient','gamma')">Gradient</button>
+        <button class="cob" onclick="setTestImage('dark','gamma')">Dark Scene</button>
+        <button class="cob" onclick="setTestImage('overexposed','gamma')">Overexposed</button>
+        <button class="cob" onclick="setTestImage('circles','gamma')">Circles</button>
+      </div>
+      <div class="info info-amber" style="margin-top:12px">
+        <strong>Gamma Correction:</strong> Monitors apply γ≈2.2 by default. Images are pre-corrected with γ=1/2.2≈0.45 so they display correctly. Without correction, images appear too dark.
+      </div>
+    </div>
+  </div>
+
+  <!-- Gamma comparison table -->
+  <div class="card">
+    <div class="card-title">Effect of γ on Midtone Intensity (r=0.5 normalized)</div>
+    <table id="gam-table">
+      <tr><th>γ value</th><th>s = 0.5^γ</th><th>In 8-bit [0,255]</th><th>Effect</th></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">MATLAB — Example 1: Gamma Correction for Monitor Display (gammaex1.m)</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div></div>
+        <span class="code-lang">MATLAB</span>
+        <button class="code-copy" onclick="copyCode('gam-code-ex1')">copy</button>
+      </div>
+      <pre id="gam-code-ex1"><span class="cmt">%% Figure 3.7: Gamma Correction — monitor gamma vs pre-correction</span>
+
+<span class="var">img</span> <span class="op">=</span> <span class="fn">im2double</span>(<span class="fn">imread</span>(<span class="str">'P2_Gammacorrection.tif'</span>));
+
+<span class="var">gamma_monitor</span>    <span class="op">=</span> <span class="num">2.5</span>;
+<span class="var">gamma_correction</span> <span class="op">=</span> <span class="num">1.0</span> <span class="op">/</span> <span class="var">gamma_monitor</span>;   <span class="cmt">% = 0.4 (mathematical inverse)</span>
+
+<span class="var">img_monitor</span>   <span class="op">=</span> <span class="var">img</span> <span class="op">.^</span> <span class="var">gamma_monitor</span>;      <span class="cmt">% (b) What monitor does: darkens</span>
+<span class="var">img_corrected</span> <span class="op">=</span> <span class="var">img</span> <span class="op">.^</span> <span class="var">gamma_correction</span>;   <span class="cmt">% (c) Pre-correction: brightens</span>
+<span class="var">img_final</span>     <span class="op">=</span> <span class="var">img_corrected</span> <span class="op">.^</span> <span class="var">gamma_monitor</span>; <span class="cmt">% (d) result = r^1 = original</span>
+
+<span class="fn">figure</span>(<span class="str">'Name'</span>,<span class="str">'Figure 3.7: Gamma Correction'</span>);
+<span class="fn">subplot</span>(<span class="num">2</span>,<span class="num">2</span>,<span class="num">1</span>); <span class="fn">imshow</span>(<span class="var">img</span>);           <span class="fn">title</span>(<span class="str">'(a) Original intensity ramp'</span>);
+<span class="fn">subplot</span>(<span class="num">2</span>,<span class="num">2</span>,<span class="num">2</span>); <span class="fn">imshow</span>(<span class="var">img_monitor</span>);   <span class="fn">title</span>(<span class="str">'(b) Monitor view (\gamma=2.5)'</span>);
+<span class="fn">subplot</span>(<span class="num">2</span>,<span class="num">2</span>,<span class="num">3</span>); <span class="fn">imshow</span>(<span class="var">img_corrected</span>); <span class="fn">title</span>(<span class="str">'(c) Gamma-corrected (\gamma=0.4)'</span>);
+<span class="fn">subplot</span>(<span class="num">2</span>,<span class="num">2</span>,<span class="num">4</span>); <span class="fn">imshow</span>(<span class="var">img_final</span>);     <span class="fn">title</span>(<span class="str">'(d) Corrected image on monitor'</span>);</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">MATLAB — Example 2: MRI Enhancement with γ &lt; 1 (gammaex2.m)</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div></div>
+        <span class="code-lang">MATLAB</span>
+        <button class="code-copy" onclick="copyCode('gam-code-ex2')">copy</button>
+      </div>
+      <pre id="gam-code-ex2"><span class="cmt">%% Figure 3.8: MRI Enhancement — dark image, use γ &lt; 1 to brighten</span>
+
+<span class="var">img</span> <span class="op">=</span> <span class="fn">im2double</span>(<span class="fn">imread</span>(<span class="str">'P3_gamma2.tif'</span>));
+
+<span class="var">gamma_1</span> <span class="op">=</span> <span class="num">0.6</span>;   <span class="cmt">% Mild brightening</span>
+<span class="var">gamma_2</span> <span class="op">=</span> <span class="num">0.4</span>;   <span class="cmt">% Moderate brightening</span>
+<span class="var">gamma_3</span> <span class="op">=</span> <span class="num">0.3</span>;   <span class="cmt">% Strong brightening</span>
+
+<span class="var">img_b</span> <span class="op">=</span> <span class="var">img</span> <span class="op">.^</span> <span class="var">gamma_1</span>;
+<span class="var">img_c</span> <span class="op">=</span> <span class="var">img</span> <span class="op">.^</span> <span class="var">gamma_2</span>;
+<span class="var">img_d</span> <span class="op">=</span> <span class="var">img</span> <span class="op">.^</span> <span class="var">gamma_3</span>;
+
+<span class="fn">figure</span>(<span class="str">'Name'</span>,<span class="str">'Figure 3.8: MRI Gamma Enhancement'</span>);
+<span class="fn">subplot</span>(<span class="num">2</span>,<span class="num">2</span>,<span class="num">1</span>); <span class="fn">imshow</span>(<span class="var">img</span>);    <span class="fn">title</span>(<span class="str">'(a) Original MRI'</span>);
+<span class="fn">subplot</span>(<span class="num">2</span>,<span class="num">2</span>,<span class="num">2</span>); <span class="fn">imshow</span>(<span class="var">img_b</span>); <span class="fn">title</span>(<span class="str">'(b) \gamma = 0.6'</span>);
+<span class="fn">subplot</span>(<span class="num">2</span>,<span class="num">2</span>,<span class="num">3</span>); <span class="fn">imshow</span>(<span class="var">img_c</span>); <span class="fn">title</span>(<span class="str">'(c) \gamma = 0.4'</span>);
+<span class="fn">subplot</span>(<span class="num">2</span>,<span class="num">2</span>,<span class="num">4</span>); <span class="fn">imshow</span>(<span class="var">img_d</span>); <span class="fn">title</span>(<span class="str">'(d) \gamma = 0.3'</span>);</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">MATLAB — Example 3: Washed-Out Aerial with γ &gt; 1 (gammaex3.m)</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div></div>
+        <span class="code-lang">MATLAB</span>
+        <button class="code-copy" onclick="copyCode('gam-code-ex3')">copy</button>
+      </div>
+      <pre id="gam-code-ex3"><span class="cmt">%% Figure 3.9: Aerial Enhancement — overexposed image, use γ &gt; 1 to darken</span>
+
+<span class="var">img</span> <span class="op">=</span> <span class="fn">im2double</span>(<span class="fn">imread</span>(<span class="str">'P4_washedout.tif'</span>));
+
+<span class="var">gamma_1</span> <span class="op">=</span> <span class="num">3.0</span>;
+<span class="var">gamma_2</span> <span class="op">=</span> <span class="num">4.0</span>;
+<span class="var">gamma_3</span> <span class="op">=</span> <span class="num">5.0</span>;
+
+<span class="var">img_b</span> <span class="op">=</span> <span class="var">img</span> <span class="op">.^</span> <span class="var">gamma_1</span>;
+<span class="var">img_c</span> <span class="op">=</span> <span class="var">img</span> <span class="op">.^</span> <span class="var">gamma_2</span>;
+<span class="var">img_d</span> <span class="op">=</span> <span class="var">img</span> <span class="op">.^</span> <span class="var">gamma_3</span>;
+
+<span class="fn">figure</span>(<span class="str">'Name'</span>,<span class="str">'Figure 3.9: Aerial Gamma Enhancement'</span>);
+<span class="fn">subplot</span>(<span class="num">2</span>,<span class="num">2</span>,<span class="num">1</span>); <span class="fn">imshow</span>(<span class="var">img</span>);    <span class="fn">title</span>(<span class="str">'(a) Original Aerial Image'</span>);
+<span class="fn">subplot</span>(<span class="num">2</span>,<span class="num">2</span>,<span class="num">2</span>); <span class="fn">imshow</span>(<span class="var">img_b</span>); <span class="fn">title</span>(<span class="str">'(b) \gamma = 3.0'</span>);
+<span class="fn">subplot</span>(<span class="num">2</span>,<span class="num">2</span>,<span class="num">3</span>); <span class="fn">imshow</span>(<span class="var">img_c</span>); <span class="fn">title</span>(<span class="str">'(c) \gamma = 4.0'</span>);
+<span class="fn">subplot</span>(<span class="num">2</span>,<span class="num">2</span>,<span class="num">4</span>); <span class="fn">imshow</span>(<span class="var">img_d</span>); <span class="fn">title</span>(<span class="str">'(d) \gamma = 5.0'</span>);</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">MATLAB — General Template</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div></div>
+        <span class="code-lang">MATLAB</span>
+        <button class="code-copy" onclick="copyCode('gam-code')">copy</button>
+      </div>
+      <pre id="gam-code"><span class="cmt">%% Power-Law (Gamma) Transform  s = c * r^gamma</span>
+
+<span class="var">f</span>     <span class="op">=</span> <span class="fn">im2double</span>(<span class="fn">imread</span>(<span class="str">'input.png'</span>)); <span class="cmt">% Normalize to [0,1]</span>
+<span class="var">gamma</span> <span class="op">=</span> <span class="num">0.5</span>;                              <span class="cmt">% &lt;1: brighten  &gt;1: darken</span>
+<span class="var">c</span>     <span class="op">=</span> <span class="num">1</span>;                                <span class="cmt">% Scale (usually 1)</span>
+
+<span class="var">g</span> <span class="op">=</span> <span class="var">c</span> <span class="op">.*</span> <span class="var">f</span> <span class="op">.^</span> <span class="var">gamma</span>;                    <span class="cmt">% Elementwise power</span>
+<span class="var">g</span> <span class="op">=</span> <span class="fn">im2uint8</span>(<span class="var">g</span>);                        <span class="cmt">% Back to uint8</span>
+
+<span class="cmt">% ── Gamma Correction for monitor display ──</span>
+<span class="var">gamma_monitor</span> <span class="op">=</span> <span class="num">2.2</span>;                    <span class="cmt">% Typical CRT/LCD gamma</span>
+<span class="var">gamma_correct</span> <span class="op">=</span> <span class="num">1</span> <span class="op">/</span> <span class="var">gamma_monitor</span>;      <span class="cmt">% = 0.4545...</span>
+<span class="var">corrected</span>     <span class="op">=</span> <span class="var">f</span> <span class="op">.^</span> <span class="var">gamma_correct</span>;
+
+<span class="cmt">% ── Using imadjust (convenient shorthand) ──</span>
+<span class="cmt">%   imadjust(f, [low_in high_in], [low_out high_out], gamma)</span>
+<span class="var">g2</span> <span class="op">=</span> <span class="fn">imadjust</span>(<span class="var">f</span>, [<span class="num">0</span> <span class="num">1</span>], [<span class="num">0</span> <span class="num">1</span>], <span class="var">gamma</span>); <span class="cmt">% Built-in gamma</span>
+
+<span class="cmt">% ── Visualise curve ──</span>
+<span class="var">r</span> <span class="op">=</span> <span class="fn">linspace</span>(<span class="num">0</span>,<span class="num">1</span>,<span class="num">256</span>);
+<span class="fn">plot</span>(<span class="var">r</span>, <span class="var">r</span>.^<span class="num">0.25</span>, <span class="var">r</span>, <span class="var">r</span>.^<span class="num">0.5</span>, <span class="var">r</span>, <span class="var">r</span>, <span class="var">r</span>, <span class="var">r</span>.^<span class="num">2</span>, <span class="var">r</span>, <span class="var">r</span>.^<span class="num">4</span>);
+<span class="fn">legend</span>(<span class="str">'\gamma=0.25'</span>,<span class="str">'\gamma=0.5'</span>,<span class="str">'\gamma=1'</span>,<span class="str">'\gamma=2'</span>,<span class="str">'\gamma=4'</span>);</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ CONTRAST STRETCH ═══════════════════════ -->
+<div class="panel" id="panel-contrast">
+  <div class="section-head">
+    <div class="section-icon icon-cs">⇅</div>
+    <div class="section-title">
+      <h2>Contrast Stretching</h2>
+      <p>Piecewise-linear mapping that expands a selected intensity range to full scale</p>
+    </div>
+  </div>
+
+  <div class="pill-row">
+    <span class="pill p-green">Piecewise Linear</span>
+    <span class="pill p-amber">Controllable Range</span>
+    <span class="pill p-blue">2 Control Points</span>
+    <span class="pill p-red">Clips Outside Range</span>
+  </div>
+
+  <div class="formula-block">
+    <span class="fl">Piecewise Linear Contrast Stretch — 3-segment version</span>
+    <span class="fdim">Control points: (r₁, s₁) and (r₂, s₂) where r₁ &lt; r₂</span><br><br>
+    s = <span class="fhi">s₁/r₁ · r</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fdim">for 0 ≤ r &lt; r₁</span><br>
+    s = <span class="fhi">(s₂−s₁)/(r₂−r₁) · (r−r₁) + s₁</span> &nbsp;<span class="fdim">for r₁ ≤ r &lt; r₂</span><br>
+    s = <span class="fhi">(L−1−s₂)/(L−1−r₂)·(r−r₂)+s₂</span> <span class="fdim">for r₂ ≤ r ≤ L−1</span>
+  </div>
+
+  <div class="interactive-grid">
+    <div>
+      <div class="param-area">
+        <div class="card-title">Control Points (drag on curve or use sliders)</div>
+        <div class="param-row">
+          <label>r₁ (input low): <span class="val" id="cs-r1-val">64</span></label>
+          <input type="range" min="0" max="254" step="1" value="64" id="cs-r1" oninput="updateCS()">
+        </div>
+        <div class="param-row">
+          <label>s₁ (output low): <span class="val" id="cs-s1-val">0</span></label>
+          <input type="range" min="0" max="255" step="1" value="0" id="cs-s1" oninput="updateCS()">
+        </div>
+        <div class="param-row">
+          <label>r₂ (input high): <span class="val" id="cs-r2-val">192</span></label>
+          <input type="range" min="1" max="255" step="1" value="192" id="cs-r2" oninput="updateCS()">
+        </div>
+        <div class="param-row">
+          <label>s₂ (output high): <span class="val" id="cs-s2-val">255</span></label>
+          <input type="range" min="0" max="255" step="1" value="255" id="cs-s2" oninput="updateCS()">
+        </div>
+      </div>
+      <div class="curve-wrap" style="margin-top:12px">
+        <canvas id="cs-curve" width="300" height="240"></canvas>
+      </div>
+      <div class="curve-label">Piecewise linear transfer curve</div>
+    </div>
+    <div>
+      <div class="img-grid">
+        <div class="img-box">
+          <canvas id="cs-in" width="200" height="160"></canvas>
+          <div class="img-box-label">Input image</div>
+        </div>
+        <div class="img-box">
+          <canvas id="cs-out" width="200" height="160"></canvas>
+          <div class="img-box-label">Contrast-stretched output</div>
+        </div>
+      </div>
+      <div class="curve-overlay-btns" style="margin-top:10px">
+        <button class="cob" onclick="setTestImage('low-contrast','contrast')">Low Contrast</button>
+        <button class="cob" onclick="setTestImage('gradient','contrast')">Gradient</button>
+        <button class="cob" onclick="setTestImage('dark','contrast')">Dark Scene</button>
+      </div>
+      <div class="info info-green" style="margin-top:12px; font-size:13.5px">
+        <strong>Tip:</strong> Set r₁=min(image) and r₂=max(image) with s₁=0, s₂=255 to automatically stretch to full dynamic range.
+      </div>
+    </div>
+  </div>
+
+  <div class="hint-steps">
+    <div class="hint-step" style="border-color:rgba(248,113,113,0.3)"><strong style="color:var(--red)">Below r₁</strong>Slope &lt; 1 → compressed</div>
+    <div class="hint-step" style="border-color:rgba(34,211,160,0.3)"><strong style="color:var(--green)">r₁ → r₂</strong>Slope &gt; 1 → stretched</div>
+    <div class="hint-step" style="border-color:rgba(248,113,113,0.3)"><strong style="color:var(--red)">Above r₂</strong>Slope &lt; 1 → compressed</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">MATLAB — Figure 3.10: Contrast Stretch + Thresholding (contraststretchthresh.m)</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div></div>
+        <span class="code-lang">MATLAB</span>
+        <button class="code-copy" onclick="copyCode('cs-code')">copy</button>
+      </div>
+      <pre id="cs-code"><span class="cmt">%% Figure 3.10: Contrast Stretching + Thresholding (Piecewise-Linear)</span>
+
+<span class="cmt">% Normalize pollen image to [0.0, 1.0]</span>
+<span class="var">img</span> <span class="op">=</span> <span class="fn">im2double</span>(<span class="fn">imread</span>(<span class="str">'P5_wo_contraststretching_threshold.tif'</span>));
+
+<span class="cmt">% ── Part 1: Contrast Stretching (Figure 3.10c) ──</span>
+<span class="cmt">% Map actual min/max → full [0,1] range (auto-detects narrow intensity band)</span>
+<span class="var">r1</span> <span class="op">=</span> <span class="fn">min</span>(<span class="var">img</span>(:));   <span class="cmt">% Darkest pixel in original</span>
+<span class="var">r2</span> <span class="op">=</span> <span class="fn">max</span>(<span class="var">img</span>(:));   <span class="cmt">% Brightest pixel in original</span>
+<span class="var">img_stretched</span> <span class="op">=</span> <span class="fn">imadjust</span>(<span class="var">img</span>, [<span class="var">r1</span>; <span class="var">r2</span>], [<span class="num">0.0</span>; <span class="num">1.0</span>]);
+
+<span class="cmt">% ── Part 2: Thresholding (Figure 3.10d) ──</span>
+<span class="cmt">% Extreme case: r1 == r2 == mean → binary output</span>
+<span class="var">m</span> <span class="op">=</span> <span class="fn">mean</span>(<span class="var">img</span>(:));
+<span class="var">img_thresholded</span> <span class="op">=</span> <span class="var">img</span> <span class="op">&gt;</span> <span class="var">m</span>;   <span class="cmt">% Logical: 1 if above mean, else 0</span>
+
+<span class="cmt">% ── Display Results ──</span>
+<span class="fn">figure</span>(<span class="str">'Name'</span>,<span class="str">'Figure 3.10: Piecewise-Linear Transformations'</span>);
+<span class="fn">subplot</span>(<span class="num">1</span>,<span class="num">3</span>,<span class="num">1</span>); <span class="fn">imshow</span>(<span class="var">img</span>);             <span class="fn">title</span>(<span class="str">'(b) Original Low-Contrast'</span>);
+<span class="fn">subplot</span>(<span class="num">1</span>,<span class="num">3</span>,<span class="num">2</span>); <span class="fn">imshow</span>(<span class="var">img_stretched</span>);   <span class="fn">title</span>(<span class="str">'(c) Contrast Stretched'</span>);
+<span class="fn">subplot</span>(<span class="num">1</span>,<span class="num">3</span>,<span class="num">3</span>); <span class="fn">imshow</span>(<span class="var">img_thresholded</span>); <span class="fn">title</span>(<span class="str">'(d) Thresholded'</span>);</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">MATLAB — General LUT Template</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div></div>
+        <span class="code-lang">MATLAB</span>
+        <button class="code-copy" onclick="copyCode('cs-code-tpl')">copy</button>
+      </div>
+      <pre id="cs-code-tpl"><span class="cmt">%% Contrast Stretching — Piecewise Linear</span>
+
+<span class="var">f</span>  <span class="op">=</span> <span class="fn">im2double</span>(<span class="fn">imread</span>(<span class="str">'input.png'</span>));
+
+<span class="cmt">% Control points (normalised to [0,1])</span>
+<span class="var">r1</span> <span class="op">=</span> <span class="num">0.25</span>; <span class="var">s1</span> <span class="op">=</span> <span class="num">0.0</span>;   <span class="cmt">% Low point</span>
+<span class="var">r2</span> <span class="op">=</span> <span class="num">0.75</span>; <span class="var">s2</span> <span class="op">=</span> <span class="num">1.0</span>;   <span class="cmt">% High point</span>
+
+<span class="cmt">% Build LUT (256 entries)</span>
+<span class="var">r</span>   <span class="op">=</span> (<span class="num">0</span>:<span class="num">255</span>) <span class="op">/</span> <span class="num">255</span>;          <span class="cmt">% Input intensities</span>
+<span class="var">LUT</span> <span class="op">=</span> <span class="fn">zeros</span>(<span class="num">1</span>,<span class="num">256</span>);
+<span class="cmt">% Segment 1: 0 → r1</span>
+<span class="var">m1</span> <span class="op">=</span> <span class="var">r</span> <span class="op">&lt;</span> <span class="var">r1</span>;
+<span class="var">LUT</span>(<span class="var">m1</span>) <span class="op">=</span> (<span class="var">s1</span><span class="op">/</span><span class="var">r1</span>) <span class="op">.*</span> <span class="var">r</span>(<span class="var">m1</span>);
+<span class="cmt">% Segment 2: r1 → r2  (the stretch zone)</span>
+<span class="var">m2</span> <span class="op">=</span> <span class="var">r</span> <span class="op">&gt;=</span> <span class="var">r1</span> <span class="op">&amp;</span> <span class="var">r</span> <span class="op">&lt;</span> <span class="var">r2</span>;
+<span class="var">LUT</span>(<span class="var">m2</span>) <span class="op">=</span> ((<span class="var">s2</span><span class="op">-</span><span class="var">s1</span>)<span class="op">/</span>(<span class="var">r2</span><span class="op">-</span><span class="var">r1</span>)) <span class="op">.*</span> (<span class="var">r</span>(<span class="var">m2</span>)<span class="op">-</span><span class="var">r1</span>) <span class="op">+</span> <span class="var">s1</span>;
+<span class="cmt">% Segment 3: r2 → 1</span>
+<span class="var">m3</span> <span class="op">=</span> <span class="var">r</span> <span class="op">&gt;=</span> <span class="var">r2</span>;
+<span class="var">LUT</span>(<span class="var">m3</span>) <span class="op">=</span> ((<span class="num">1</span><span class="op">-</span><span class="var">s2</span>)<span class="op">/</span>(<span class="num">1</span><span class="op">-</span><span class="var">r2</span>)) <span class="op">.*</span> (<span class="var">r</span>(<span class="var">m3</span>)<span class="op">-</span><span class="var">r2</span>) <span class="op">+</span> <span class="var">s2</span>;
+
+<span class="cmt">% Apply via indexing</span>
+<span class="var">idx</span> <span class="op">=</span> <span class="fn">round</span>(<span class="var">f</span> <span class="op">*</span> <span class="num">255</span>) <span class="op">+</span> <span class="num">1</span>;     <span class="cmt">% 1-based MATLAB index</span>
+<span class="var">g</span>   <span class="op">=</span> <span class="var">LUT</span>(<span class="var">idx</span>);              <span class="cmt">% Apply LUT</span>
+
+<span class="cmt">% ── Auto-stretch using min/max ──</span>
+<span class="var">g_auto</span> <span class="op">=</span> <span class="fn">imadjust</span>(<span class="var">f</span>);        <span class="cmt">% Stretches [1%–99%] by default</span>
+<span class="cmt">%  or manually:</span>
+<span class="var">g_auto2</span> <span class="op">=</span> (<span class="var">f</span> <span class="op">-</span> <span class="fn">min</span>(<span class="var">f</span>(:))) <span class="op">/</span> (<span class="fn">max</span>(<span class="var">f</span>(:)) <span class="op">-</span> <span class="fn">min</span>(<span class="var">f</span>(:)));</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ THRESHOLD ═══════════════════════ -->
+<div class="panel" id="panel-threshold">
+  <div class="section-head">
+    <div class="section-icon icon-thr">▌</div>
+    <div class="section-title">
+      <h2>Thresholding</h2>
+      <p>Binary segmentation — every pixel becomes black or white based on a threshold level</p>
+    </div>
+  </div>
+
+  <div class="pill-row">
+    <span class="pill p-purple">Binary Output</span>
+    <span class="pill p-amber">Special case of contrast stretch</span>
+    <span class="pill p-green">Foundation of segmentation</span>
+  </div>
+
+  <div class="formula-block">
+    <span class="fl">Thresholding — binary version</span>
+    s = <span class="fhi">(L−1)</span> &nbsp;if r &gt; T<br>
+    s = <span class="fhi">0</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if r ≤ T<br><br>
+    <span class="fdim">T = threshold value &nbsp;|&nbsp; This is contrast stretch with r₁=r₂=T, s₁=0, s₂=L−1</span>
+  </div>
+
+  <div class="interactive-grid">
+    <div>
+      <div class="param-area">
+        <div class="card-title">Threshold Control</div>
+        <div class="param-row">
+          <label>Threshold T: <span class="val" id="thr-t-val">128</span> / 255</label>
+          <input type="range" min="1" max="254" step="1" value="128" id="thr-t" oninput="updateThreshold()">
+        </div>
+        <div style="margin-top:10px">
+          <div class="card-title">Variant</div>
+          <div class="bitdepth-row">
+            <button class="bdbtn active" id="thr-v-binary" onclick="setThrVariant('binary')">Binary</button>
+            <button class="bdbtn" id="thr-v-inv" onclick="setThrVariant('inv')">Binary Inv</button>
+            <button class="bdbtn" id="thr-v-trunc" onclick="setThrVariant('trunc')">Truncate</button>
+            <button class="bdbtn" id="thr-v-zero" onclick="setThrVariant('tozero')">To-Zero</button>
+          </div>
+        </div>
+        <div class="formula-block" id="thr-formula-display" style="margin-top:12px; font-size:12px">
+          <span class="fl">Current variant: Binary</span>
+          s = 255 if r &gt; T<br>
+          s = 0 &nbsp; if r ≤ T
+        </div>
+      </div>
+      <div class="curve-wrap" style="margin-top:12px">
+        <canvas id="thr-curve" width="300" height="220"></canvas>
+      </div>
+      <div class="curve-label">Transfer curve</div>
+    </div>
+    <div>
+      <div class="img-grid">
+        <div class="img-box">
+          <canvas id="thr-in" width="200" height="160"></canvas>
+          <div class="img-box-label">Input image</div>
+        </div>
+        <div class="img-box">
+          <canvas id="thr-out" width="200" height="160"></canvas>
+          <div class="img-box-label" id="thr-out-label">Binary output</div>
+        </div>
+      </div>
+      <div class="curve-overlay-btns" style="margin-top:10px">
+        <button class="cob" onclick="setTestImage('gradient','threshold')">Gradient</button>
+        <button class="cob" onclick="setTestImage('circles','threshold')">Circles</button>
+        <button class="cob" onclick="setTestImage('noise','threshold')">Noisy</button>
+        <button class="cob" onclick="setTestImage('dark','threshold')">Dark Scene</button>
+      </div>
+      <div class="info info-purple" style="margin-top:12px">
+        <strong>Otsu's Method:</strong> Automatically finds T by maximising between-class variance. Use <code style="color:var(--green); font-family:'Fira Code',monospace">graythresh()</code> in MATLAB.
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">MATLAB Implementation</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div></div>
+        <span class="code-lang">MATLAB</span>
+        <button class="code-copy" onclick="copyCode('thr-code')">copy</button>
+      </div>
+      <pre id="thr-code"><span class="cmt">%% Thresholding — Manual and Otsu's Method</span>
+
+<span class="var">f</span> <span class="op">=</span> <span class="fn">im2double</span>(<span class="fn">imread</span>(<span class="str">'input.png'</span>));
+<span class="kw">if</span> <span class="fn">size</span>(<span class="var">f</span>,<span class="num">3</span>) <span class="op">==</span> <span class="num">3</span>
+    <span class="var">f</span> <span class="op">=</span> <span class="fn">rgb2gray</span>(<span class="var">f</span>);         <span class="cmt">% Convert to greyscale first</span>
+<span class="kw">end</span>
+
+<span class="cmt">% ── Manual threshold ──</span>
+<span class="var">T</span>        <span class="op">=</span> <span class="num">0.5</span>;                <span class="cmt">% Normalised threshold (=128/255)</span>
+<span class="var">g_manual</span> <span class="op">=</span> <span class="var">f</span> <span class="op">&gt;</span> <span class="var">T</span>;            <span class="cmt">% Logical array: 0 or 1</span>
+
+<span class="cmt">% ── Otsu's automatic threshold ──</span>
+<span class="var">T_otsu</span>  <span class="op">=</span> <span class="fn">graythresh</span>(<span class="var">f</span>);    <span class="cmt">% Returns normalised T ∈ [0,1]</span>
+<span class="var">g_otsu</span>  <span class="op">=</span> <span class="fn">imbinarize</span>(<span class="var">f</span>);    <span class="cmt">% Otsu's + binarize in one call</span>
+<span class="fn">fprintf</span>(<span class="str">'Otsu T = %.3f (%d/255)\n'</span>, <span class="var">T_otsu</span>, <span class="fn">round</span>(<span class="var">T_otsu</span><span class="op">*</span><span class="num">255</span>));
+
+<span class="cmt">% ── Variants ──</span>
+<span class="var">g_inv</span>   <span class="op">=</span> <span class="op">~</span><span class="var">g_manual</span>;          <span class="cmt">% Binary inverse</span>
+<span class="var">g_trunc</span> <span class="op">=</span> <span class="fn">min</span>(<span class="var">f</span>, <span class="var">T</span>);           <span class="cmt">% Truncate: keep ≤T, clip ≥T</span>
+<span class="var">g_zero</span>  <span class="op">=</span> <span class="var">f</span> <span class="op">.*</span> (<span class="var">f</span> <span class="op">&gt;</span> <span class="var">T</span>);       <span class="cmt">% To-zero: keep above T only</span>
+
+<span class="cmt">% ── Adaptive thresholding (spatially varying) ──</span>
+<span class="var">g_adapt</span> <span class="op">=</span> <span class="fn">imbinarize</span>(<span class="var">f</span>,<span class="str">'adaptive'</span>,<span class="str">'Sensitivity'</span>,<span class="num">0.4</span>);
+
+<span class="cmt">% ── Display results ──</span>
+<span class="fn">montage</span>({<span class="var">f</span>, <span class="var">g_manual</span>, <span class="var">g_otsu</span>, <span class="var">g_adapt</span>}, ...
+  <span class="str">'ThumbnailSize'</span>,[<span class="num">256</span> <span class="num">256</span>]);
+<span class="fn">title</span>(<span class="str">'Original | Manual | Otsu | Adaptive'</span>);</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Otsu's Method — Intuition</div>
+    <p style="font-size:14.5px; margin-bottom:12px">Otsu's method finds T* that <em>maximises the between-class variance</em> σ²_B(T) of the two pixel groups created by the threshold:</p>
+    <div class="formula-block">
+      <span class="fl">Between-class variance (maximise over T)</span>
+      σ²_B(T) = <span class="fhi">ω₁(T) · ω₂(T) · [μ₁(T) − μ₂(T)]²</span><br>
+      <span class="fdim">ω₁, ω₂ = probability of each class &nbsp;|&nbsp; μ₁, μ₂ = mean of each class</span>
+    </div>
+    <div class="curve-wrap" style="margin-top:12px">
+      <canvas id="otsu-demo" width="680" height="120"></canvas>
+    </div>
+    <div class="curve-label">Otsu's σ²_B vs. T — peak = optimal threshold</div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════
+const L = 256;
+
+function getCanvas(id){ return document.getElementById(id); }
+function getCtx(id){ return getCanvas(id)?.getContext('2d'); }
+
+function drawGrid(ctx, W, H, padL, padT, chartW, chartH){
+  ctx.strokeStyle='#1e2d47'; ctx.lineWidth=0.5;
+  for(let i=0;i<=4;i++){
+    const y=padT+chartH*(1-i/4);
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+chartW,y); ctx.stroke();
+    const x=padL+chartW*i/4;
+    ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padT+chartH); ctx.stroke();
+  }
+}
+
+function drawAxes(ctx, padL, padT, chartW, chartH){
+  ctx.strokeStyle='#253550'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+chartH); ctx.lineTo(padL+chartW,padT+chartH); ctx.stroke();
+}
+
+// Draw transfer curve (xs,ys both 0–255)
+function drawCurve(ctx, xs, ys, W, H, color='#22d3a0', lineW=2){
+  const padL=30,padR=10,padT=10,padB=24;
+  const cW=W-padL-padR, cH=H-padT-padB;
+  ctx.fillStyle='#060a10'; ctx.fillRect(0,0,W,H);
+  drawGrid(ctx,W,H,padL,padT,cW,cH);
+
+  // Diagonal reference
+  ctx.strokeStyle='#1e2d47'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(padL,padT+cH); ctx.lineTo(padL+cW,padT); ctx.stroke(); ctx.setLineDash([]);
+
+  // Curve
+  ctx.strokeStyle=color; ctx.lineWidth=lineW;
+  ctx.beginPath();
+  xs.forEach((x,i)=>{
+    const px=padL+x/255*cW, py=padT+cH-(ys[i]/255)*cH;
+    i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  });
+  ctx.stroke();
+
+  // Axis labels
+  ctx.fillStyle='#3a5070'; ctx.font='9px Fira Code'; ctx.textAlign='center';
+  ctx.fillText('0',padL,padT+cH+12); ctx.fillText('255',padL+cW,padT+cH+12);
+  ctx.textAlign='right'; ctx.fillText('255',padL-2,padT+6); ctx.fillText('0',padL-2,padT+cH+2);
+  drawAxes(ctx,padL,padT,cW,cH);
+}
+
+// Draw a synthetic test image on a canvas
+const testImages = {};
+function generateTestImage(type, W=200, H=160){
+  const data = new Uint8Array(W*H);
+  for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+    const i=y*W+x;
+    switch(type){
+      case 'gradient': data[i]=Math.round(x/(W-1)*255); break;
+      case 'circles': {
+        const cx=W/2,cy=H/2;
+        const d=Math.sqrt((x-cx)**2+(y-cy)**2);
+        data[i]=Math.round(Math.abs(Math.sin(d/10))*255);
+        break;
+      }
+      case 'noise': data[i]=Math.floor(Math.random()*256); break;
+      case 'dark': data[i]=Math.round((x/(W-1))*(y/(H-1))*180); break;
+      case 'bright': data[i]=Math.round(200+Math.random()*55); break;
+      case 'overexposed': data[i]=Math.round(150+x/(W-1)*105); break;
+      case 'low-contrast': data[i]=Math.round(80+x/(W-1)*100); break;
+      case 'fft': {
+        // Simulate spectrum-like: bright center, falls off
+        const cx=W/2,cy=H/2;
+        const d=Math.sqrt((x-cx)**2+(y-cy)**2);
+        data[i]=Math.min(255, Math.round(10000/(d+1)));
+        break;
+      }
+    }
+  }
+  testImages[type]={data,W,H};
+  return testImages[type];
+}
+
+function applyLUT(data, lut){
+  return data.map(v=>lut[v]);
+}
+
+function renderGrayToCanvas(canvasId, data, W, H){
+  const canvas=getCanvas(canvasId); if(!canvas) return;
+  canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  const imgData=ctx.createImageData(W,H);
+  for(let i=0;i<data.length;i++){
+    const v=data[i];
+    imgData.data[i*4]=v; imgData.data[i*4+1]=v; imgData.data[i*4+2]=v; imgData.data[i*4+3]=255;
+  }
+  ctx.putImageData(imgData,0,0);
+}
+
+function buildLUT(fn){
+  return Array.from({length:256},(_,r)=>Math.max(0,Math.min(255,Math.round(fn(r)))));
+}
+
+// current test images per panel
+const currentTest = {neg:'gradient',log:'dark',gamma:'gradient',contrast:'low-contrast',threshold:'circles'};
+
+function setTestImage(type, panel){
+  currentTest[panel]=type;
+  applyCurrentTransform(panel);
+}
+
+function applyCurrentTransform(panel){
+  const type=currentTest[panel]||'gradient';
+  const {data,W,H}=generateTestImage(type);
+  let lut;
+  switch(panel){
+    case 'neg': lut=buildLUT(r=>255-r); break;
+    case 'log': {
+      const c=parseFloat(document.getElementById('log-c').value);
+      const base=logBase;
+      lut=buildLUT(r=>{
+        const rn=r/255;
+        let s;
+        if(base==='natural') s=c*Math.log(1+rn)/Math.log(1+1);
+        else if(base==='10') s=c*Math.log10(1+rn)/Math.log10(2);
+        else s=c*Math.log2(1+rn);
+        return s*255;
+      }); break;
+    }
+    case 'gamma': {
+      const gam=parseFloat(document.getElementById('gam-slider').value);
+      const gc=parseFloat(document.getElementById('gamc-slider').value);
+      lut=buildLUT(r=>gc*Math.pow(r/255,gam)*255); break;
+    }
+    case 'contrast': {
+      const r1=+document.getElementById('cs-r1').value/255;
+      const s1=+document.getElementById('cs-s1').value/255;
+      const r2=+document.getElementById('cs-r2').value/255;
+      const s2=+document.getElementById('cs-s2').value/255;
+      lut=buildLUT(r=>{
+        const rn=r/255;
+        let sn;
+        if(rn<r1) sn=r1>0?(s1/r1)*rn:0;
+        else if(rn<r2) sn=r2>r1?((s2-s1)/(r2-r1))*(rn-r1)+s1:s1;
+        else sn=r2<1?((1-s2)/(1-r2))*(rn-r2)+s2:s2;
+        return sn*255;
+      }); break;
+    }
+    case 'threshold': {
+      const T=+document.getElementById('thr-t').value;
+      const v=thrVariant;
+      lut=buildLUT(r=>{
+        switch(v){
+          case 'binary': return r>T?255:0;
+          case 'inv': return r>T?0:255;
+          case 'trunc': return r>T?T:r;
+          case 'tozero': return r>T?r:0;
+        }
+      }); break;
+    }
+  }
+  renderGrayToCanvas(panel+'-in', data, W, H);
+  const out=applyLUT(data, lut);
+  renderGrayToCanvas(panel+'-out', out, W, H);
+}
+
+// ═══════════════════════════════════════════════
+// OVERVIEW LUT
+// ═══════════════════════════════════════════════
+function drawIdentityLUT(){
+  const canvas=getCanvas('ov-lut-canvas'); if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const xs=Array.from({length:256},(_,i)=>i);
+  drawCurve(ctx,xs,xs,canvas.width,canvas.height,'#22d3a0',2);
+}
+
+// ═══════════════════════════════════════════════
+// NEGATIVE
+// ═══════════════════════════════════════════════
+function initNeg(){
+  const canvas=getCanvas('neg-curve'); if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const xs=Array.from({length:256},(_,i)=>i);
+  const ys=xs.map(r=>255-r);
+  drawCurve(ctx,xs,ys,canvas.width,canvas.height,'#f87171',2.5);
+  applyCurrentTransform('neg');
+}
+
+// ═══════════════════════════════════════════════
+// LOG
+// ═══════════════════════════════════════════════
+let logBase='natural';
+function setLogBase(base){
+  logBase=base;
+  ['n','10','2'].forEach(b=>document.getElementById('logbase-'+b).classList.remove('active'));
+  document.getElementById('logbase-'+base.replace('natural','n')).classList.add('active');
+  updateLog();
+}
+
+function updateLog(){
+  const c=parseFloat(document.getElementById('log-c').value);
+  document.getElementById('log-c-val').textContent=c.toFixed(2);
+  const canvas=getCanvas('log-curve'); if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const xs=Array.from({length:256},(_,i)=>i);
+  const ys=xs.map(r=>{
+    const rn=r/255;
+    let s;
+    if(logBase==='natural') s=c*Math.log(1+rn)/Math.log(1+1);
+    else if(logBase==='10') s=c*Math.log10(1+rn)/Math.log10(2);
+    else s=c*Math.log2(1+rn);
+    return Math.min(255,s*255);
+  });
+  drawCurve(ctx,xs,ys,canvas.width,canvas.height,'#60a5fa',2.5);
+  applyCurrentTransform('log');
+}
+
+// ═══════════════════════════════════════════════
+// GAMMA
+// ═══════════════════════════════════════════════
+let activeOverlays = [];
+
+const overlayColors = {0.25:'#f87171', 0.5:'#f59e0b', 1.0:'#22d3a0', 2.0:'#60a5fa', 4.0:'#c084fc'};
+const overlayKeyMap = {0.25:'025', 0.5:'05', 1.0:'1', 2.0:'2', 4.0:'4'};
+
+function updateGamma() {
+  const gamma = parseFloat(document.getElementById('gam-slider').value);
+  const c     = parseFloat(document.getElementById('gamc-slider').value);
+
+  document.getElementById('gam-val').textContent       = gamma.toFixed(2);
+  document.getElementById('gamc-val').textContent      = c.toFixed(2);
+  document.getElementById('gam-out-label').textContent = `Output (γ=${gamma.toFixed(2)})`;
+  document.getElementById('gam-curve-label').textContent = `s = ${c.toFixed(2)} · r^${gamma.toFixed(2)}`;
+
+  const canvas = getCanvas('gam-curve'); if(!canvas) return;
+  const ctx    = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const padL=30, padR=10, padT=10, padB=24;
+  const cW = W-padL-padR, cH = H-padT-padB;
+  const xs = Array.from({length:256},(_,i)=>i);
+
+  // Clear canvas with background
+  ctx.fillStyle='#060a10'; ctx.fillRect(0,0,W,H);
+  drawGrid(ctx,W,H,padL,padT,cW,cH);
+
+  // Identity diagonal reference
+  ctx.strokeStyle='#1e2d47'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(padL,padT+cH); ctx.lineTo(padL+cW,padT); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw overlay curves (without clearing canvas)
+  activeOverlays.forEach(og => {
+    const oys = xs.map(r => Math.min(255, Math.pow(r/255, og)*255));
+    ctx.strokeStyle = overlayColors[og]||'#555';
+    ctx.lineWidth   = 1.5;
+    ctx.beginPath();
+    xs.forEach((x,i)=>{
+      const px=padL+x/255*cW, py=padT+cH-(oys[i]/255)*cH;
+      i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+    });
+    ctx.stroke();
+  });
+
+  // Draw main gamma curve (amber, thick)
+  const mainYs = xs.map(r => Math.min(255, c*Math.pow(r/255,gamma)*255));
+  ctx.strokeStyle='#f59e0b'; ctx.lineWidth=2.5;
+  ctx.beginPath();
+  xs.forEach((x,i)=>{
+    const px=padL+x/255*cW, py=padT+cH-(mainYs[i]/255)*cH;
+    i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  });
+  ctx.stroke();
+
+  // Axis labels
+  ctx.fillStyle='#3a5070'; ctx.font='9px Fira Code'; ctx.textAlign='center';
+  ctx.fillText('0',padL,padT+cH+12); ctx.fillText('255',padL+cW,padT+cH+12);
+  ctx.textAlign='right'; ctx.fillText('255',padL-2,padT+6); ctx.fillText('0',padL-2,padT+cH+2);
+  drawAxes(ctx,padL,padT,cW,cH);
+
+  // Populate gamma midtone table
+  const tbl = document.getElementById('gam-table');
+  if(tbl){
+    const gammaRows = [0.25,0.5,1,2,4];
+    let html = '<tr><th>γ value</th><th>s = 0.5^γ</th><th>In 8-bit [0,255]</th><th>Effect</th></tr>';
+    gammaRows.forEach(gv=>{
+      const s = Math.pow(0.5,gv);
+      const b = Math.round(s*255);
+      const [cls,eff] = gv<1?['g','Brighten (expands darks)']:gv===1?['b','Identity (no change)']:['r','Darken (expands brights)'];
+      html+=`<tr><td class="${cls}">${gv}</td><td>${s.toFixed(3)}</td><td>${b}</td><td>${eff}</td></tr>`;
+    });
+    tbl.innerHTML=html;
+  }
+
+  applyCurrentTransform('gamma');
+}
+
+function gammaOverlay(g) {
+  const key   = overlayKeyMap[g]||g.toString().replace('.','');
+  const btnId = 'gov-'+key;
+  const btn   = document.getElementById(btnId);
+
+  if(activeOverlays.includes(g)){
+    activeOverlays = activeOverlays.filter(v=>v!==g);
+    if(btn) btn.className='cob';
+  } else {
+    activeOverlays.push(g);
+    if(btn) btn.className='cob active-amber';
+  }
+  updateGamma();
+}
+
+// ═══════════════════════════════════════════════
+// CONTRAST STRETCH
+// ═══════════════════════════════════════════════
+function updateCS(){
+  const r1=+document.getElementById('cs-r1').value;
+  const s1=+document.getElementById('cs-s1').value;
+  const r2=Math.max(r1+1,+document.getElementById('cs-r2').value);
+  const s2=+document.getElementById('cs-s2').value;
+  document.getElementById('cs-r1-val').textContent=r1;
+  document.getElementById('cs-s1-val').textContent=s1;
+  document.getElementById('cs-r2-val').textContent=r2;
+  document.getElementById('cs-s2-val').textContent=s2;
+
+  const canvas=getCanvas('cs-curve'); if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  // Piecewise LUT
+  const xs=[0, r1, r2, 255];
+  const ys=[r1>0?(s1/r1)*0:0, s1, s2, s2+(1-s2/255)*(255-r2)];
+
+  // Smooth curve via LUT
+  const allX=Array.from({length:256},(_,i)=>i);
+  const allY=buildLUT(r=>{
+    const rn=r/255,r1n=r1/255,s1n=s1/255,r2n=r2/255,s2n=s2/255;
+    if(r1n<=0) return rn<r2n?((s2n-s1n)/(r2n))*rn*255:((1-s2n)/(1-r2n))*(rn-r2n)*255+s2;
+    if(rn<r1n) return (s1n/r1n)*rn*255;
+    if(rn<r2n) return ((s2n-s1n)/(r2n-r1n))*(rn-r1n)*255+s1;
+    return r2n<1?((1-s2n)/(1-r2n))*(rn-r2n)*255+s2:s2;
+  });
+  drawCurve(ctx,allX,allY,canvas.width,canvas.height,'#22d3a0',2.5);
+
+  // Draw control points
+  const padL=30,padR=10,padT=10,padB=24;
+  const cW=canvas.width-padL-padR, cH=canvas.height-padT-padB;
+  [[r1,s1],[r2,s2]].forEach(([rx,sy])=>{
+    const px=padL+rx/255*cW, py=padT+cH-sy/255*cH;
+    ctx.beginPath(); ctx.arc(px,py,5,0,Math.PI*2);
+    ctx.fillStyle='#f59e0b'; ctx.fill();
+    ctx.strokeStyle='#060a10'; ctx.lineWidth=2; ctx.stroke();
+  });
+
+  applyCurrentTransform('contrast');
+}
+
+// ═══════════════════════════════════════════════
+// THRESHOLD
+// ═══════════════════════════════════════════════
+let thrVariant='binary';
+const thrFormulas={
+  binary:{label:'Binary',text:'s = 255 if r > T\ns = 0   if r ≤ T'},
+  inv:{label:'Binary Inverse',text:'s = 0   if r > T\ns = 255 if r ≤ T'},
+  trunc:{label:'Truncate',text:'s = T   if r > T\ns = r   if r ≤ T'},
+  tozero:{label:'To-Zero',text:'s = r   if r > T\ns = 0   if r ≤ T'}
+};
+
+function setThrVariant(v){
+  thrVariant=v;
+  Object.keys(thrFormulas).forEach(k=>document.getElementById('thr-v-'+k)?.classList.remove('active'));
+  document.getElementById('thr-v-'+v).classList.add('active');
+  const f=thrFormulas[v];
+  document.getElementById('thr-formula-display').innerHTML=`<span class="fl">Current variant: ${f.label}</span>${f.text.replace(/\n/g,'<br>')}`;
+  document.getElementById('thr-out-label').textContent=f.label+' output';
+  updateThreshold();
+}
+
+function updateThreshold(){
+  const T=+document.getElementById('thr-t').value;
+  document.getElementById('thr-t-val').textContent=T;
+  const canvas=getCanvas('thr-curve'); if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const xs=Array.from({length:256},(_,i)=>i);
+  const ys=xs.map(r=>{
+    switch(thrVariant){
+      case 'binary': return r>T?255:0;
+      case 'inv': return r>T?0:255;
+      case 'trunc': return r>T?T:r;
+      case 'tozero': return r>T?r:0;
+    }
+  });
+  drawCurve(ctx,xs,ys,canvas.width,canvas.height,'#c084fc',2.5);
+  applyCurrentTransform('threshold');
+
+  // Otsu demo
+  drawOtsuDemo(T);
+}
+
+function drawOtsuDemo(currentT){
+  // Build a sample histogram (bimodal)
+  const hist=Array.from({length:256},(_,i)=>{
+    const p1=Math.exp(-0.5*((i-80)/30)**2)*0.4;
+    const p2=Math.exp(-0.5*((i-170)/40)**2)*0.6;
+    return p1+p2;
+  });
+  const total=hist.reduce((a,b)=>a+b,0);
+  const pnorm=hist.map(v=>v/total);
+
+  // Compute between-class variance for each T
+  const sigma=Array.from({length:256},(_,T)=>{
+    let w1=0,w2=0,mu1=0,mu2=0;
+    for(let i=0;i<=T;i++){w1+=pnorm[i];mu1+=i*pnorm[i];}
+    for(let i=T+1;i<256;i++){w2+=pnorm[i];mu2+=i*pnorm[i];}
+    if(w1>0)mu1/=w1; if(w2>0)mu2/=w2;
+    return w1*w2*(mu1-mu2)**2;
+  });
+  const maxSig=Math.max(...sigma);
+
+  const canvas=getCanvas('otsu-demo'); if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  ctx.fillStyle='#060a10'; ctx.fillRect(0,0,W,H);
+
+  // Draw histogram faint
+  const maxH=Math.max(...pnorm);
+  pnorm.forEach((v,i)=>{
+    const bh=(v/maxH)*(H-30)*0.6;
+    ctx.fillStyle=i<=currentT?'rgba(248,113,113,0.2)':'rgba(34,211,160,0.2)';
+    ctx.fillRect(i/255*(W-40)+20, H-14-bh, 3, bh);
+  });
+
+  // Draw sigma curve
+  ctx.strokeStyle='#f59e0b'; ctx.lineWidth=2;
+  ctx.beginPath();
+  sigma.forEach((v,i)=>{
+    const px=i/255*(W-40)+20, py=(H-14)-(v/maxSig)*(H-30)*0.9;
+    i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  });
+  ctx.stroke();
+
+  // Current T marker
+  const tx=currentT/255*(W-40)+20;
+  ctx.strokeStyle='#c084fc'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(tx,0); ctx.lineTo(tx,H-14); ctx.stroke(); ctx.setLineDash([]);
+
+  // Labels
+  ctx.fillStyle='#3a5070'; ctx.font='10px Fira Code'; ctx.textAlign='center';
+  ctx.fillText('0',20,H-2); ctx.fillText('255',W-20,H-2);
+  ctx.fillStyle='#f59e0b'; ctx.fillText('σ²_B(T)',40,14);
+  ctx.fillStyle='#c084fc'; ctx.fillText('T='+currentT,tx,H-2);
+}
+
+// ═══════════════════════════════════════════════
+// PANEL SWITCHING
+// ═══════════════════════════════════════════════
+const panelInits = {
+  overview: drawIdentityLUT,
+  negative: initNeg,
+  log: updateLog,
+  gamma: updateGamma,
+  contrast: updateCS,
+  threshold: updateThreshold
+};
+
+const inited={};
+function showPanel(name){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  const navItems=document.querySelectorAll('.nav-item');
+  const idx={overview:0,negative:1,log:2,gamma:3,contrast:4,threshold:5};
+  navItems[idx[name]]?.classList.add('active');
+  if(!inited[name]){ panelInits[name]?.(); inited[name]=true; }
+  // Preload test image
+  if(currentTest[name]) generateTestImage(currentTest[name]);
+}
+
+// ═══════════════════════════════════════════════
+// COPY CODE
+// ═══════════════════════════════════════════════
+function copyCode(id){
+  const el=document.getElementById(id);
+  const text=el.innerText||el.textContent;
+  navigator.clipboard?.writeText(text).then(()=>{
+    const btn=el.closest('.code-wrap').querySelector('.code-copy');
+    const orig=btn.textContent; btn.textContent='copied!';
+    btn.style.color='var(--green)'; btn.style.borderColor='var(--green)';
+    setTimeout(()=>{ btn.textContent=orig; btn.style.color=''; btn.style.borderColor=''; },1500);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  // Pre-generate test images
+  ['gradient','circles','noise','dark','bright','overexposed','low-contrast','fft'].forEach(t=>generateTestImage(t));
+  showPanel('overview');
+});
+</script>
+</body>
+</html>

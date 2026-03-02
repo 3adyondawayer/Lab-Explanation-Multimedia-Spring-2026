@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Histogram Processing — Gonzalez & Woods</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #141720;
+    --surface2: #1c2030;
+    --border: #2a2f45;
+    --gold: #e8b94f;
+    --gold-dim: #a07c2a;
+    --cyan: #4ecdc4;
+    --red: #e05252;
+    --green: #52c97a;
+    --purple: #a78bfa;
+    --text: #d4d9ef;
+    --text-dim: #6b748f;
+    --text-bright: #f0f4ff;
+    --bar: #3d4466;
+    --bar-hl: #e8b94f;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  header {
+    background: linear-gradient(135deg, #0d0f14 0%, #141a2e 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 40px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+    background: radial-gradient(ellipse at 80% 50%, rgba(232,185,79,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px; font-weight: 700;
+    color: var(--text-bright);
+    letter-spacing: -0.5px;
+  }
+  header h1 span { color: var(--gold); }
+  header p { color: var(--text-dim); font-size: 13px; margin-top: 4px; font-style: italic; }
+
+  /* Tabs */
+  .tabs {
+    display: flex; gap: 4px;
+    padding: 16px 40px 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 10px 20px; cursor: pointer;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; font-weight: 600;
+    color: var(--text-dim);
+    transition: all 0.2s;
+    white-space: nowrap;
+    background: transparent;
+  }
+  .tab:hover { color: var(--text); background: var(--surface2); }
+  .tab.active {
+    background: var(--bg);
+    border-color: var(--border);
+    color: var(--gold);
+    border-bottom-color: var(--bg);
+    margin-bottom: -1px;
+  }
+  .tab-badge {
+    display: inline-block; font-size: 9px;
+    background: var(--gold-dim); color: #0d0f14;
+    border-radius: 3px; padding: 1px 5px; margin-left: 6px;
+  }
+
+  /* Main Layout */
+  .main { padding: 32px 40px; max-width: 1400px; margin: 0 auto; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px; color: var(--text-bright);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .card-title .icon {
+    width: 28px; height: 28px;
+    background: var(--gold-dim);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+
+  /* Formula boxes */
+  .formula {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 6px 6px 0;
+    padding: 14px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    color: var(--cyan);
+    margin: 14px 0;
+    overflow-x: auto;
+  }
+  .formula .label { color: var(--text-dim); font-size: 11px; display: block; margin-bottom: 4px; }
+
+  /* Steps */
+  .steps { counter-reset: step-counter; }
+  .step {
+    display: flex; gap: 16px;
+    margin-bottom: 16px;
+    opacity: 0.35;
+    transition: opacity 0.4s;
+  }
+  .step.visible { opacity: 1; }
+  .step-num {
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    border: 1.5px solid var(--gold-dim);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; font-weight: 600;
+    color: var(--gold);
+    margin-top: 2px;
+  }
+  .step.visible .step-num { background: var(--gold); color: #0d0f14; }
+  .step-body h4 { color: var(--text-bright); font-size: 14px; margin-bottom: 4px; }
+  .step-body p { color: var(--text); font-size: 13.5px; }
+
+  /* Btn */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 20px;
+    background: var(--gold); color: #0d0f14;
+    border: none; border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .btn:hover { background: #f0c96a; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn.secondary {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn.secondary:hover { border-color: var(--gold); color: var(--gold); background: transparent; }
+  .btn.small { padding: 6px 14px; font-size: 11px; }
+
+  /* Tables */
+  table {
+    width: 100%; border-collapse: collapse; margin: 12px 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  }
+  th {
+    background: var(--surface2); color: var(--gold);
+    padding: 8px 12px; text-align: center;
+    border: 1px solid var(--border); font-weight: 600;
+  }
+  td {
+    padding: 7px 12px; text-align: center;
+    border: 1px solid var(--border); color: var(--text);
+  }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  td.hl { color: var(--gold); font-weight: 600; }
+  td.hl-red { color: var(--red); }
+  td.hl-green { color: var(--green); }
+  td.hl-cyan { color: var(--cyan); }
+  td.hl-purple { color: var(--purple); }
+
+  /* Canvas / chart areas */
+  canvas { display: block; }
+  .chart-wrap {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    position: relative;
+  }
+  .chart-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--text-dim);
+    text-align: center; margin-top: 8px;
+  }
+
+  /* Grid layouts */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  @media(max-width:900px) { .grid2,.grid3 { grid-template-columns: 1fr; } }
+
+  /* Slider */
+  .slider-wrap { margin: 12px 0; }
+  .slider-wrap label {
+    display: flex; justify-content: space-between;
+    font-size: 12px; color: var(--text-dim); margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .slider-wrap label span { color: var(--gold); }
+  input[type=range] {
+    width: 100%; accent-color: var(--gold);
+    background: var(--surface2); border-radius: 4px; height: 4px;
+  }
+
+  /* Highlight box */
+  .info-box {
+    background: rgba(232,185,79,0.07);
+    border: 1px solid var(--gold-dim);
+    border-radius: 8px; padding: 14px 18px;
+    margin: 14px 0; font-size: 13.5px;
+  }
+  .info-box.cyan { background: rgba(78,205,196,0.07); border-color: rgba(78,205,196,0.4); }
+  .info-box.red { background: rgba(224,82,82,0.07); border-color: rgba(224,82,82,0.4); }
+  .info-box.green { background: rgba(82,201,122,0.07); border-color: rgba(82,201,122,0.4); }
+  .info-box strong { color: var(--gold); }
+  .info-box.cyan strong { color: var(--cyan); }
+  .info-box.red strong { color: var(--red); }
+  .info-box.green strong { color: var(--green); }
+
+  /* Toggle switch */
+  .toggle-row { display: flex; align-items: center; gap: 14px; margin: 12px 0; }
+  .toggle-label { font-size: 13px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
+  .toggle {
+    position: relative; width: 44px; height: 22px;
+    background: var(--border); border-radius: 11px;
+    cursor: pointer; transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle.on { background: var(--gold); }
+  .toggle::after {
+    content: ''; position: absolute;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #fff; top: 3px; left: 3px;
+    transition: left 0.2s;
+  }
+  .toggle.on::after { left: 25px; }
+
+  /* Annotation */
+  .annot {
+    font-size: 12px; color: var(--text-dim); font-style: italic;
+    margin-top: 6px;
+  }
+
+  /* Pill */
+  .pill {
+    display: inline-block; padding: 2px 10px;
+    border-radius: 99px; font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .pill.cont { background: rgba(78,205,196,0.15); color: var(--cyan); border: 1px solid rgba(78,205,196,0.3); }
+  .pill.disc { background: rgba(232,185,79,0.15); color: var(--gold); border: 1px solid rgba(232,185,79,0.3); }
+  .pill.round { background: rgba(167,139,250,0.15); color: var(--purple); border: 1px solid rgba(167,139,250,0.3); }
+
+  /* Compare diff */
+  .diff-row { display: flex; gap: 12px; align-items: flex-start; margin: 10px 0; }
+  .diff-box { flex: 1; padding: 12px; border-radius: 6px; font-size: 13px; }
+  .diff-cont { background: rgba(78,205,196,0.08); border: 1px solid rgba(78,205,196,0.3); }
+  .diff-disc { background: rgba(232,185,79,0.08); border: 1px solid rgba(232,185,79,0.3); }
+  .diff-box h5 { margin-bottom: 6px; font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+  .diff-cont h5 { color: var(--cyan); }
+  .diff-disc h5 { color: var(--gold); }
+
+  /* Section separator */
+  .sep { height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* Local kernel visualizer */
+  .kernel-grid { display: inline-grid; gap: 3px; }
+  .kernel-cell {
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 4px; font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer; transition: all 0.15s;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .kernel-cell.center { border-color: var(--gold); background: rgba(232,185,79,0.15); color: var(--gold); }
+  .kernel-cell.neighbor { border-color: var(--cyan); background: rgba(78,205,196,0.1); color: var(--cyan); }
+  .kernel-cell.inactive { opacity: 0.3; }
+
+  /* Rounding demo */
+  .round-demo {
+    display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0;
+  }
+  .round-card {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 10px 14px; min-width: 110px;
+    text-align: center;
+  }
+  .round-card .rv { font-size: 20px; font-family: 'JetBrains Mono', monospace; color: var(--text-bright); font-weight: 600; }
+  .round-card .raw { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .round-card .rounded { font-size: 13px; font-family: 'JetBrains Mono', monospace; color: var(--purple); margin-top: 2px; }
+  .round-card.exact { border-color: var(--green); }
+  .round-card.exact .rv { color: var(--green); }
+
+  /* Spec method viz */
+  .spec-arrow { text-align: center; color: var(--gold); font-size: 20px; line-height: 1; margin: 4px 0; }
+
+  /* Responsive note */
+  .responsive-note { display: none; }
+  @media(max-width:700px) { .main { padding: 16px; } .tabs { padding: 12px 16px 0; } .responsive-note { display: block; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Histogram <span>Processing</span></h1>
+  <p>Digital Image Processing · Gonzalez & Woods · Interactive Learning Module</p>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('intro')">📖 Overview</div>
+  <div class="tab" onclick="switchTab('heq-cont')">~ Continuous HE<span class="tab-badge">Global</span></div>
+  <div class="tab" onclick="switchTab('heq-disc')">≈ Discrete HE<span class="tab-badge">Global</span></div>
+  <div class="tab" onclick="switchTab('compare')">⇄ Cont vs Disc</div>
+  <div class="tab" onclick="switchTab('hspec')">◎ Hist Specification<span class="tab-badge">Global</span></div>
+  <div class="tab" onclick="switchTab('local')">⬡ Local Processing<span class="tab-badge">Local</span></div>
+</div>
+
+<div class="main">
+
+<!-- ===================== INTRO PANEL ===================== -->
+<div class="panel active" id="panel-intro">
+  <div class="card">
+    <div class="card-title"><div class="icon">📖</div> What is Histogram Processing?</div>
+    <p>A <strong>histogram</strong> of a digital image with intensity levels in the range [0, L−1] is a discrete function:</p>
+    <div class="formula">
+      <span class="label">Definition</span>
+      h(rₖ) = nₖ
+    </div>
+    <p>where <em>rₖ</em> is the <em>k</em>-th intensity value and <em>nₖ</em> is the number of pixels with that intensity. Normalized: <code style="color:var(--cyan)">p(rₖ) = nₖ / MN</code> (MN = total pixels)</p>
+  </div>
+
+  <div class="grid3">
+    <div class="card" style="border-top: 3px solid var(--cyan); cursor:pointer" onclick="switchTab('heq-cont')">
+      <div class="card-title" style="font-size:14px">~ Continuous HE</div>
+      <p style="font-size:13px; color:var(--text-dim)">Transformation derived from PDF/CDF of intensities. Perfect theoretical redistribution.</p>
+      <div style="margin-top:12px"><span class="pill cont">Continuous</span></div>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--gold); cursor:pointer" onclick="switchTab('heq-disc')">
+      <div class="card-title" style="font-size:14px">≈ Discrete HE</div>
+      <p style="font-size:13px; color:var(--text-dim)">Practical implementation on real images. Rounding introduces artifacts. The real workhorse.</p>
+      <div style="margin-top:12px"><span class="pill disc">Discrete</span></div>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--purple); cursor:pointer" onclick="switchTab('hspec')">
+      <div class="card-title" style="font-size:14px">◎ Histogram Specification</div>
+      <p style="font-size:13px; color:var(--text-dim)">Match the histogram of one image to a desired target shape. More flexible than HE.</p>
+      <div style="margin-top:12px"><span class="pill round">Specification</span></div>
+    </div>
+  </div>
+
+  <div class="card" style="border-top: 3px solid var(--green);">
+    <div class="card-title"><div class="icon">⬡</div> Local Histogram Processing</div>
+    <p>Apply histogram methods to <strong>local neighborhoods</strong> around each pixel instead of the full image. Reveals local detail that global methods miss — especially useful for images with varying illumination.</p>
+  </div>
+
+  <!-- Interactive histogram builder -->
+  <div class="card">
+    <div class="card-title"><div class="icon">🎛</div> Build Your Own Image & Histogram</div>
+    <p style="margin-bottom:14px; color:var(--text-dim); font-size:13px">Drag the sliders to set pixel counts for each of 8 intensity levels (L=8). Watch the histogram update live.</p>
+    <div id="builder-sliders"></div>
+    <div class="grid2" style="margin-top:16px">
+      <div>
+        <div class="chart-wrap"><canvas id="intro-hist" width="360" height="160"></canvas></div>
+        <div class="chart-label">Input Histogram h(rₖ)</div>
+      </div>
+      <div>
+        <div class="chart-wrap"><canvas id="intro-img" width="360" height="160"></canvas></div>
+        <div class="chart-label">Pseudo-Image (intensity bands)</div>
+      </div>
+    </div>
+    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
+      <button class="btn small" onclick="loadPreset('dark')">Dark Image</button>
+      <button class="btn small" onclick="loadPreset('bright')">Bright Image</button>
+      <button class="btn small" onclick="loadPreset('low-contrast')">Low Contrast</button>
+      <button class="btn small" onclick="loadPreset('bimodal')">Bimodal</button>
+      <button class="btn small secondary" onclick="loadPreset('random')">Random</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CONTINUOUS HE PANEL ===================== -->
+<div class="panel" id="panel-heq-cont">
+  <div class="card">
+    <div class="card-title"><div class="icon">~</div> Continuous Histogram Equalization — Theory</div>
+    <p>In the continuous domain, let <em>r</em> be a random variable representing intensity. The equalization transformation is:</p>
+    <div class="formula">
+      <span class="label">Transformation (Continuous)</span>
+      s = T(r) = (L−1) · ∫₀ʳ pᵣ(w) dw = (L−1) · Cᵣ(r)
+    </div>
+    <p>where <strong>pᵣ(r)</strong> is the PDF of intensities and <strong>Cᵣ(r)</strong> is the CDF. If <em>T(r)</em> is continuous, monotonically increasing, and maps [0,1]→[0,1], the result has a <strong>uniform PDF</strong>.</p>
+
+    <div class="info-box cyan">
+      <strong>Key Theorem:</strong> If <em>s = (L−1)·∫pᵣ(w)dw</em>, then the PDF of <em>s</em> is <strong>uniform</strong>: <em>pₛ(s) = 1/(L−1)</em>. This is proved by change of variables and properties of the CDF.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step-by-Step: Continuous Case <span style="font-size:12px; color:var(--text-dim); margin-left:8px">(click each step to expand)</span></div>
+    
+    <div id="cont-steps" class="steps">
+      <div class="step visible">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Define the PDF of input image intensities</h4>
+          <p>Assume intensities <em>r ∈ [0, L−1]</em>. Model them as a continuous random variable with PDF <em>pᵣ(r)</em>. For example, a dark image has most mass near <em>r=0</em>.</p>
+          <div class="formula">pᵣ(r) ≥ 0 &nbsp;&nbsp;and&nbsp;&nbsp; ∫₀^(L−1) pᵣ(r) dr = 1</div>
+        </div>
+      </div>
+      <div class="step visible">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Compute the CDF (Cumulative Distribution Function)</h4>
+          <p>The CDF integrates the PDF from 0 up to the current intensity:</p>
+          <div class="formula">Cᵣ(r) = ∫₀ʳ pᵣ(w) dw</div>
+          <p>The CDF is monotonically non-decreasing, Cᵣ(0) = 0, Cᵣ(L−1) = 1.</p>
+        </div>
+      </div>
+      <div class="step visible">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Apply the equalization transformation</h4>
+          <div class="formula">s = T(r) = (L−1) · Cᵣ(r)</div>
+          <p>This maps each intensity <em>r</em> to a new intensity <em>s</em> via the scaled CDF.</p>
+        </div>
+      </div>
+      <div class="step visible">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>Prove the output PDF is uniform</h4>
+          <p>Using change of variables: <em>pₛ(s) = pᵣ(r) · |dr/ds|</em></p>
+          <div class="formula">ds/dr = (L−1) · pᵣ(r) &nbsp;&nbsp;→&nbsp;&nbsp; pₛ(s) = pᵣ(r) · 1/((L−1)·pᵣ(r)) = 1/(L−1)</div>
+          <div class="info-box green" style="margin-top:10px"><strong>Result:</strong> pₛ(s) = 1/(L−1) — a <strong>uniform distribution</strong> across all intensities!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF/CDF visualizer -->
+  <div class="card">
+    <div class="card-title"><div class="icon">📊</div> Interactive PDF → CDF → Transformed PDF</div>
+    <p style="font-size:13px; color:var(--text-dim); margin-bottom:14px">Choose a PDF shape to see how the continuous transformation works:</p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px">
+      <button class="btn small" onclick="setContinuousPDF('dark')">Dark (left-skewed PDF)</button>
+      <button class="btn small" onclick="setContinuousPDF('bright')">Bright (right-skewed PDF)</button>
+      <button class="btn small" onclick="setContinuousPDF('gaussian')">Mid-range (Gaussian PDF)</button>
+      <button class="btn small" onclick="setContinuousPDF('bimodal')">Bimodal PDF</button>
+    </div>
+    <div class="grid3">
+      <div>
+        <div class="chart-wrap"><canvas id="cont-pdf" width="280" height="150"></canvas></div>
+        <div class="chart-label">① Input PDF pᵣ(r)</div>
+      </div>
+      <div>
+        <div class="chart-wrap"><canvas id="cont-cdf" width="280" height="150"></canvas></div>
+        <div class="chart-label">② CDF → Transformation T(r)</div>
+      </div>
+      <div>
+        <div class="chart-wrap"><canvas id="cont-out" width="280" height="150"></canvas></div>
+        <div class="chart-label">③ Output PDF pₛ(s) — uniform!</div>
+      </div>
+    </div>
+    <div class="info-box" style="margin-top:14px">
+      <strong>Observation:</strong> Notice how the output is always flat (uniform) regardless of the input shape. This is the <em>theoretical guarantee</em> of continuous HE. In practice (discrete case), this flatness is only approximated.
+    </div>
+  </div>
+</div>
+
+<!-- ===================== DISCRETE HE PANEL ===================== -->
+<div class="panel" id="panel-heq-disc">
+  <div class="card">
+    <div class="card-title"><div class="icon">≈</div> Discrete Histogram Equalization — Practice</div>
+    <p>For a digital image with L discrete intensity levels, the discrete approximation replaces the integral with a sum and the PDF with the normalized histogram:</p>
+    <div class="formula">
+      <span class="label">Normalized histogram (probability estimate)</span>
+      p(rₖ) = nₖ / MN &nbsp;&nbsp;&nbsp;&nbsp; k = 0, 1, ..., L−1
+    </div>
+    <div class="formula">
+      <span class="label">Discrete Transformation (equalization mapping)</span>
+      sₖ = T(rₖ) = (L−1) · Σⱼ₌₀ᵏ p(rⱼ) = (L−1) · Σⱼ₌₀ᵏ nⱼ/MN
+    </div>
+    <div class="info-box red">
+      <strong>Critical difference from continuous:</strong> The values of <em>sₖ</em> must be mapped to integer intensity levels. This <strong>rounding</strong> means the output histogram is NOT perfectly uniform — it's only approximated.
+    </div>
+  </div>
+
+  <!-- Interactive discrete HE walkthrough -->
+  <div class="card">
+    <div class="card-title"><div class="icon">🧮</div> Walk Through the Computation (L = 8)</div>
+    <p style="font-size:13px; color:var(--text-dim); margin-bottom:14px">Using L=8 (intensity levels 0–7) so the numbers are manageable. Set pixel counts below:</p>
+
+    <!-- Preset loader -->
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px">
+      <button class="btn small" onclick="loadDiscPreset('gonzalez')">📚 Textbook Example</button>
+      <button class="btn small" onclick="loadDiscPreset('dark')">Dark Image</button>
+      <button class="btn small" onclick="loadDiscPreset('bright')">Bright Image</button>
+      <button class="btn small" onclick="loadDiscPreset('low')">Low Contrast</button>
+      <button class="btn small secondary" onclick="loadDiscPreset('random')">Random</button>
+    </div>
+
+    <div id="disc-sliders"></div>
+
+    <!-- Steps shown progressively -->
+    <div class="sep"></div>
+    <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center">
+      <button class="btn" onclick="discStep(1)" id="disc-btn-1">Step 1: Show Histogram</button>
+      <button class="btn secondary" onclick="discStep(2)" id="disc-btn-2" disabled>Step 2: Compute PDF</button>
+      <button class="btn secondary" onclick="discStep(3)" id="disc-btn-3" disabled>Step 3: Compute CDF</button>
+      <button class="btn secondary" onclick="discStep(4)" id="disc-btn-4" disabled>Step 4: Scale & Round</button>
+      <button class="btn secondary" onclick="discStep(5)" id="disc-btn-5" disabled>Step 5: Map & Result</button>
+      <button class="btn small secondary" onclick="discReset()" style="margin-left:auto">↺ Reset Steps</button>
+    </div>
+
+    <div id="disc-table-area"></div>
+    <div id="disc-chart-area" style="display:none">
+      <div class="grid2" style="margin-top:16px">
+        <div>
+          <div class="chart-wrap"><canvas id="disc-hist-in" width="360" height="160"></canvas></div>
+          <div class="chart-label">Input Histogram</div>
+        </div>
+        <div>
+          <div class="chart-wrap"><canvas id="disc-hist-out" width="360" height="160"></canvas></div>
+          <div class="chart-label">Output Histogram (after equalization)</div>
+        </div>
+      </div>
+    </div>
+    <div id="disc-rounding-area" style="display:none">
+      <div class="sep"></div>
+      <div class="card-title" style="margin-top:0; font-size:15px">⚠️ Rounding Details</div>
+      <p style="font-size:13px; margin-bottom:10px">Each sₖ = (L−1) · CDF(k) gives a real value that must be rounded to the nearest integer:</p>
+      <div id="disc-rounding-cards" class="round-demo"></div>
+      <div class="info-box red" style="margin-top:12px">
+        <strong>Why this matters:</strong> Multiple rₖ values can map to the <em>same</em> sₖ after rounding. This merges histogram bars and creates <strong>gaps</strong> in the output histogram — the output is <em>never perfectly flat</em>.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== COMPARE PANEL ===================== -->
+<div class="panel" id="panel-compare">
+  <div class="card">
+    <div class="card-title"><div class="icon">⇄</div> Continuous vs. Discrete Histogram Equalization</div>
+    <p>Understanding the gap between theory and practice is crucial. Here's a side-by-side breakdown:</p>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-box diff-cont">
+      <h5>~ CONTINUOUS</h5>
+      <ul style="font-size:13px; padding-left:18px; line-height:2">
+        <li>Intensities are <strong>real-valued</strong> r ∈ [0, L−1]</li>
+        <li>PDF pᵣ(r) is a continuous function</li>
+        <li>Transformation T(r) = (L−1)·∫₀ʳ pᵣ(w)dw</li>
+        <li>Output PDF pₛ(s) is <strong>exactly uniform</strong></li>
+        <li>No rounding — every output is unique</li>
+        <li><em>Theoretical ideal — cannot be achieved in practice</em></li>
+      </ul>
+    </div>
+    <div class="diff-box diff-disc">
+      <h5>≈ DISCRETE</h5>
+      <ul style="font-size:13px; padding-left:18px; line-height:2">
+        <li>Intensities are <strong>integers</strong> rₖ ∈ {0, 1, ..., L−1}</li>
+        <li>Histogram p(rₖ) = nₖ/MN (discrete PMF)</li>
+        <li>Transformation sₖ = (L−1)·Σⱼ₌₀ᵏ p(rⱼ)</li>
+        <li>sₖ must be <strong>rounded</strong> to integer</li>
+        <li>Multiple rₖ can map to same sₖ → histogram spikes</li>
+        <li><em>Practical implementation — always an approximation</em></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- The rounding problem demonstrated -->
+  <div class="card">
+    <div class="card-title"><div class="icon">⚠️</div> The Rounding Problem — Demonstrated</div>
+    <p style="font-size:13px; color:var(--text-dim); margin-bottom:14px">With L=8, after computing sₖ = 7 · CDF(k), we must round. Watch what happens:</p>
+
+    <table id="compare-table">
+      <tr>
+        <th>k (rₖ)</th><th>nₖ</th><th>p(rₖ)</th><th>CDF(k)</th>
+        <th>7·CDF(k) (exact)</th><th style="color:var(--purple)">sₖ (rounded)</th><th>Note</th>
+      </tr>
+    </table>
+
+    <div class="info-box red" style="margin-top:14px" id="compare-merge-note"></div>
+
+    <div class="sep"></div>
+    <p style="font-size:13px; margin-bottom:12px"><strong>Toggle</strong> to see what would happen in the <em>ideal continuous case</em> vs. the <em>discrete rounded case</em>:</p>
+
+    <div class="toggle-row">
+      <div class="toggle" id="ideal-toggle" onclick="toggleIdeal()"></div>
+      <div class="toggle-label" id="ideal-toggle-label">Showing: Discrete (rounded)</div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <div class="chart-wrap"><canvas id="compare-in" width="360" height="160"></canvas></div>
+        <div class="chart-label">Input Histogram</div>
+      </div>
+      <div>
+        <div class="chart-wrap"><canvas id="compare-out" width="360" height="160"></canvas></div>
+        <div class="chart-label" id="compare-out-label">Output Histogram (discrete/rounded)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key differences in math -->
+  <div class="card">
+    <div class="card-title" style="font-size:15px">📐 The Math Difference at a Glance</div>
+    <div class="grid2">
+      <div>
+        <div class="formula">
+          <span class="label">Continuous — uses integral</span>
+          s = (L−1) · ∫₀ʳ pᵣ(w) dw
+        </div>
+        <div class="formula" style="border-left-color: var(--cyan)">
+          <span class="label">Proof of uniformity (change of variables)</span>
+          pₛ(s) = pᵣ(r)|dr/ds| = pᵣ(r)/(pᵣ(r)·(L−1)) = 1/(L−1)
+        </div>
+      </div>
+      <div>
+        <div class="formula" style="border-left-color: var(--gold)">
+          <span class="label">Discrete — uses sum + rounding</span>
+          sₖ = round( (L−1)·Σⱼ₌₀ᵏ nⱼ/MN )
+        </div>
+        <div class="formula" style="border-left-color: var(--purple)">
+          <span class="label">Cannot guarantee uniformity because:</span>
+          round(x) ≠ round(y)  even if x ≈ y → bins merge
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== HISTOGRAM SPECIFICATION PANEL ===================== -->
+<div class="panel" id="panel-hspec">
+  <div class="card">
+    <div class="card-title"><div class="icon">◎</div> Histogram Specification (Matching)</div>
+    <p>Histogram equalization always produces a <em>uniform</em> output histogram. But what if we want a <strong>specific, desired shape</strong>? Histogram specification (also called histogram matching) solves this.</p>
+    <div class="info-box">
+      <strong>Goal:</strong> Given an input image with histogram p(rₖ), find a transformation so the output image has a target histogram pz(zₖ).
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Method — 3 Stages</div>
+
+    <div class="step visible" style="margin-bottom:16px; opacity:1">
+      <div class="step-num" style="background:var(--gold); color:#0d0f14">1</div>
+      <div class="step-body">
+        <h4>Equalize the input image</h4>
+        <p>Apply discrete histogram equalization to the input:</p>
+        <div class="formula">sₖ = T(rₖ) = (L−1) · Σⱼ₌₀ᵏ p(rⱼ)</div>
+      </div>
+    </div>
+
+    <div class="step visible" style="margin-bottom:16px; opacity:1">
+      <div class="step-num" style="background:var(--gold); color:#0d0f14">2</div>
+      <div class="step-body">
+        <h4>Equalize the target (desired) histogram</h4>
+        <p>Treat the target histogram pz(zₖ) as if it were an image and equalize it:</p>
+        <div class="formula">vₖ = G(zₖ) = (L−1) · Σⱼ₌₀ᵏ pz(zⱼ)</div>
+      </div>
+    </div>
+
+    <div class="step visible" style="margin-bottom:16px; opacity:1">
+      <div class="step-num" style="background:var(--gold); color:#0d0f14">3</div>
+      <div class="step-body">
+        <h4>Invert to find the final mapping</h4>
+        <p>For each sₖ from step 1, find the zₖ whose G(zₖ) ≈ sₖ. The mapping is: <strong>r → s → z</strong></p>
+        <div class="formula">z = G⁻¹(s) = G⁻¹(T(r))</div>
+        <div class="info-box cyan" style="margin-top:10px">
+          <strong>Intuition:</strong> Both s and v live in the same "equalized space." By equating them we find the output intensity z that corresponds to each input r.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive spec demo -->
+  <div class="card">
+    <div class="card-title"><div class="icon">🎛</div> Interactive Histogram Specification</div>
+    <p style="font-size:13px; color:var(--text-dim); margin-bottom:14px">Set the input and target histograms, then watch the specification unfold step by step.</p>
+
+    <div class="grid2">
+      <div>
+        <strong style="font-size:13px; color:var(--gold); font-family:'JetBrains Mono',monospace">INPUT histogram</strong>
+        <div id="spec-input-sliders" style="margin-top:10px"></div>
+        <div class="chart-wrap" style="margin-top:10px"><canvas id="spec-in-chart" width="300" height="120"></canvas></div>
+      </div>
+      <div>
+        <strong style="font-size:13px; color:var(--cyan); font-family:'JetBrains Mono',monospace">TARGET histogram</strong>
+        <div id="spec-target-sliders" style="margin-top:10px"></div>
+        <div class="chart-wrap" style="margin-top:10px"><canvas id="spec-target-chart" width="300" height="120"></canvas></div>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin:16px 0; display:flex; gap:10px; justify-content:center; flex-wrap:wrap">
+      <button class="btn small" onclick="specPreset('input','dark')">Input: Dark</button>
+      <button class="btn small" onclick="specPreset('input','low')">Input: Low Contrast</button>
+      <button class="btn small" onclick="specPreset('target','bright')">Target: Bright</button>
+      <button class="btn small" onclick="specPreset('target','gaussian')">Target: Gaussian</button>
+    </div>
+
+    <div style="text-align:center; margin: 16px 0">
+      <button class="btn" onclick="runSpec()">▶ Run Specification</button>
+    </div>
+
+    <div id="spec-result" style="display:none">
+      <div class="sep"></div>
+      <table id="spec-table">
+        <tr>
+          <th>rₖ</th><th>p(rₖ)</th><th style="color:var(--gold)">sₖ = T(rₖ)</th>
+          <th>pz(zₖ)</th><th style="color:var(--cyan)">vₖ = G(zₖ)</th>
+          <th style="color:var(--purple)">zₖ (matched)</th><th>Mapping r→z</th>
+        </tr>
+      </table>
+      <div class="chart-wrap" style="margin-top:16px"><canvas id="spec-out-chart" width="700" height="140"></canvas></div>
+      <div class="chart-label">Output Histogram (approximates target shape)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== LOCAL PANEL ===================== -->
+<div class="panel" id="panel-local">
+  <div class="card">
+    <div class="card-title"><div class="icon">⬡</div> Local Histogram Processing</div>
+    <p>Global methods use the entire image histogram. <strong>Local processing</strong> defines a neighborhood around each pixel, computes the histogram of just that neighborhood, and applies equalization (or specification) — then assigns the transformed center pixel value.</p>
+    <div class="info-box green">
+      <strong>Why local?</strong> Global equalization can fail when an image has regions with very different illumination. Local processing enhances detail in <em>each region independently</em>, revealing structure that global methods miss.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Algorithm</div>
+    <div class="steps">
+      <div class="step visible" style="opacity:1">
+        <div class="step-num" style="background:var(--gold); color:#0d0f14">1</div>
+        <div class="step-body">
+          <h4>Define a neighborhood (window) of size m×n</h4>
+          <p>Common choices: 3×3, 5×5, 7×7. A smaller window preserves local structure; a larger window approaches the global result.</p>
+          <div class="formula">Typical: m = n = odd integer (3, 5, 7, ...)</div>
+        </div>
+      </div>
+      <div class="step visible" style="opacity:1">
+        <div class="step-num" style="background:var(--gold); color:#0d0f14">2</div>
+        <div class="step-body">
+          <h4>Slide the window over every pixel</h4>
+          <p>The window is centered at each pixel (x,y) in turn. The neighborhood contains m×n pixel values.</p>
+        </div>
+      </div>
+      <div class="step visible" style="opacity:1">
+        <div class="step-num" style="background:var(--gold); color:#0d0f14">3</div>
+        <div class="step-body">
+          <h4>Compute histogram of the neighborhood</h4>
+          <p>Calculate h(rₖ) and p(rₖ) using only the m×n pixels inside the window. This is the <em>local</em> histogram.</p>
+        </div>
+      </div>
+      <div class="step visible" style="opacity:1">
+        <div class="step-num" style="background:var(--gold); color:#0d0f14">4</div>
+        <div class="step-body">
+          <h4>Apply equalization to the center pixel only</h4>
+          <p>Using the local histogram, compute the transformation for the <strong>center pixel</strong>'s intensity. The result replaces the center pixel in the output image.</p>
+          <div class="formula">output(x,y) = T_local(input(x,y)) using local histogram at (x,y)</div>
+        </div>
+      </div>
+      <div class="step visible" style="opacity:1">
+        <div class="step-num" style="background:var(--gold); color:#0d0f14">5</div>
+        <div class="step-body">
+          <h4>Move to next pixel (efficient update)</h4>
+          <p>When moving the window one pixel right, only two columns change. This allows efficient incremental histogram updates rather than full recomputation each step.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive kernel visualizer -->
+  <div class="card">
+    <div class="card-title"><div class="icon">🔍</div> Interactive Local Window Explorer</div>
+    <p style="font-size:13px; color:var(--text-dim); margin-bottom:14px">Click any cell in the image grid to set it as the center. The window highlights neighbors used in the local histogram.</p>
+
+    <div class="slider-wrap">
+      <label>Window size (m×m): <span id="window-size-label">3×3</span></label>
+      <input type="range" min="1" max="3" step="1" value="1" oninput="setWindowSize(this.value)" id="window-slider">
+    </div>
+
+    <div class="grid2">
+      <div>
+        <div style="margin-bottom:8px; font-size:12px; font-family:'JetBrains Mono',monospace; color:var(--text-dim)">8×8 Image (click to select center)</div>
+        <div id="local-grid" class="kernel-grid" style="grid-template-columns: repeat(8, 36px)"></div>
+        <div style="margin-top:10px; font-size:12px; font-family:'JetBrains Mono',monospace">
+          <span style="color:var(--gold)">■</span> Center pixel &nbsp;
+          <span style="color:var(--cyan)">■</span> Neighborhood &nbsp;
+          <span style="color:var(--text-dim)">■</span> Outside window
+        </div>
+      </div>
+      <div>
+        <div style="margin-bottom:8px; font-size:12px; font-family:'JetBrains Mono',monospace; color:var(--text-dim)">Local Histogram (neighborhood only)</div>
+        <div class="chart-wrap"><canvas id="local-hist" width="300" height="150"></canvas></div>
+        <div id="local-info" style="margin-top:8px; font-size:12px; font-family:'JetBrains Mono',monospace; color:var(--text-dim)"></div>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+    <div class="grid2">
+      <div class="info-box">
+        <strong>Global Equalization Issue:</strong> A small bright spot in a dark image may be suppressed, because global CDF is dominated by dark pixels. The bright region "disappears."
+      </div>
+      <div class="info-box green">
+        <strong>Local Equalization Advantage:</strong> The local histogram around that bright spot shows its full range, so the spot gets properly equalized relative to its surroundings.
+      </div>
+    </div>
+
+    <div class="card-title" style="margin-top:20px; font-size:15px">Efficiency Trick: Sliding Window Update</div>
+    <p style="font-size:13px">Recomputing the histogram for every pixel position is expensive. Instead:</p>
+    <div class="formula" style="margin-top:8px">
+      When window moves right by 1 pixel:<br>
+      new_hist = old_hist − (remove left column) + (add right column)<br>
+      Cost: O(m) per pixel instead of O(m²)
+    </div>
+  </div>
+
+  <!-- Global vs Local comparison -->
+  <div class="card">
+    <div class="card-title"><div class="icon">⇄</div> Global vs. Local — When to Use Each</div>
+    <div class="diff-row">
+      <div class="diff-box" style="background:rgba(78,205,196,0.05); border:1px solid rgba(78,205,196,0.3)">
+        <h5 style="color:var(--cyan); font-family:'JetBrains Mono',monospace; margin-bottom:8px">GLOBAL HE — Use when:</h5>
+        <ul style="font-size:13px; padding-left:18px; line-height:2">
+          <li>Image has <em>uniform illumination</em></li>
+          <li>Simple, fast enhancement needed</li>
+          <li>Whole image has similar characteristics</li>
+          <li>Pre-processing step for other algorithms</li>
+        </ul>
+      </div>
+      <div class="diff-box" style="background:rgba(82,201,122,0.05); border:1px solid rgba(82,201,122,0.3)">
+        <h5 style="color:var(--green); font-family:'JetBrains Mono',monospace; margin-bottom:8px">LOCAL HE — Use when:</h5>
+        <ul style="font-size:13px; padding-left:18px; line-height:2">
+          <li>Image has <em>varying illumination</em></li>
+          <li>Important details are in dark/bright regions</li>
+          <li>Medical/satellite/forensic imaging</li>
+          <li>Local texture enhancement needed</li>
+        </ul>
+      </div>
+    </div>
+    <div class="info-box red" style="margin-top:14px">
+      <strong>Cost:</strong> Local HE is O(MN·m²) in the naive implementation — much slower than global O(MN). The sliding window trick reduces this to O(MN·m).
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ==================== UTILITIES ====================
+const L = 8;
+const LEVELS = Array.from({length:L}, (_,i) => i);
+
+function clamp(v,mn,mx){return Math.min(mx,Math.max(mn,v));}
+function round1(v){return Math.round(v*10)/10;}
+
+function drawHistogram(canvasId, counts, opts={}) {
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  const padL=30, padR=10, padT=10, padB=24;
+  const chartW = W-padL-padR, chartH = H-padT-padB;
+  const barW = chartW / counts.length;
+  const maxV = Math.max(...counts, 1);
+
+  // Background
+  ctx.fillStyle = '#1c2030';
+  ctx.fillRect(0,0,W,H);
+
+  // Grid lines
+  ctx.strokeStyle = '#2a2f45'; ctx.lineWidth = 0.5;
+  for(let i=0; i<=4; i++) {
+    const y = padT + chartH - (i/4)*chartH;
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke();
+  }
+
+  // Bars
+  counts.forEach((v,i) => {
+    const bh = (v/maxV)*chartH;
+    const x = padL + i*barW;
+    const y = padT + chartH - bh;
+
+    const color = opts.colors ? opts.colors[i] : (opts.color || '#3d4466');
+    ctx.fillStyle = color;
+    ctx.fillRect(x+1, y, barW-2, bh);
+
+    // Value label on top
+    if(opts.showVal && v > 0) {
+      ctx.fillStyle = '#6b748f'; ctx.font = '9px JetBrains Mono'; ctx.textAlign='center';
+      ctx.fillText(opts.valFmt ? opts.valFmt(v,i) : v, x+barW/2, y-2);
+    }
+
+    // X label
+    ctx.fillStyle = '#6b748f'; ctx.font = '10px JetBrains Mono'; ctx.textAlign='center';
+    ctx.fillText(i, x+barW/2, H-6);
+  });
+
+  // Y axis
+  ctx.strokeStyle = '#3d4466'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+chartH); ctx.stroke();
+
+  // Y labels
+  ctx.fillStyle = '#3d4466'; ctx.font = '9px JetBrains Mono'; ctx.textAlign='right';
+  ctx.fillText(maxV, padL-2, padT+8);
+  ctx.fillText(0, padL-2, padT+chartH+2);
+
+  // Overlay target line
+  if(opts.target) {
+    const tMax = Math.max(...opts.target);
+    ctx.strokeStyle='rgba(78,205,196,0.6)'; ctx.lineWidth=1.5; ctx.setLineDash([3,3]);
+    ctx.beginPath();
+    opts.target.forEach((v,i) => {
+      const x = padL + i*barW + barW/2;
+      const y = padT + chartH - (v/tMax)*chartH;
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+}
+
+function drawCurve(canvasId, xs, ys, opts={}) {
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.fillStyle='#1c2030'; ctx.fillRect(0,0,W,H);
+  const padL=30,padR=10,padT=10,padB=20;
+  const cW=W-padL-padR, cH=H-padT-padB;
+  const xMax=xs[xs.length-1]||1, yMax=Math.max(...ys,0.01);
+
+  // Grid
+  ctx.strokeStyle='#2a2f45'; ctx.lineWidth=0.5;
+  for(let i=0;i<=4;i++){
+    const y=padT+cH*(1-i/4);
+    ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);ctx.stroke();
+  }
+
+  // Curve
+  ctx.strokeStyle=opts.color||'#4ecdc4'; ctx.lineWidth=2;
+  if(opts.fill){ ctx.fillStyle=opts.fill; }
+  ctx.beginPath();
+  xs.forEach((x,i)=>{
+    const px=padL+x/xMax*cW, py=padT+cH*(1-ys[i]/yMax);
+    i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  });
+  ctx.stroke();
+  if(opts.fill){
+    ctx.lineTo(padL+xs[xs.length-1]/xMax*cW, padT+cH);
+    ctx.lineTo(padL, padT+cH); ctx.closePath(); ctx.fill();
+  }
+
+  // Axes
+  ctx.strokeStyle='#3d4466'; ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(padL,padT);ctx.lineTo(padL,padT+cH);
+  ctx.lineTo(padL+cW,padT+cH);ctx.stroke();
+}
+
+// ==================== INTRO BUILDER ====================
+let introData = [50,70,80,90,55,40,20,10];
+
+function buildIntroSliders() {
+  const container = document.getElementById('builder-sliders');
+  container.innerHTML = '';
+  container.style.display='grid'; container.style.gridTemplateColumns='1fr 1fr'; container.style.gap='6px';
+  introData.forEach((v,i)=>{
+    const wrap = document.createElement('div');
+    wrap.className='slider-wrap'; wrap.style.marginBottom='2px';
+    wrap.innerHTML=`<label>r${i}: <span id="intro-s${i}">${v}</span> px</label>
+    <input type="range" min="0" max="200" value="${v}" oninput="updateIntro(${i},this.value)">`;
+    container.appendChild(wrap);
+  });
+  updateIntroCharts();
+}
+
+function updateIntro(i,v){ introData[i]=+v; document.getElementById('intro-s'+i).textContent=v; updateIntroCharts(); }
+
+function updateIntroCharts(){
+  drawHistogram('intro-hist', introData, {color:'#3d4466', showVal:true});
+  // Pseudo image
+  const canvas=document.getElementById('intro-img');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d'); const W=canvas.width,H=canvas.height;
+  ctx.fillStyle='#1c2030'; ctx.fillRect(0,0,W,H);
+  const total=introData.reduce((a,b)=>a+b,0)||1;
+  let x=0;
+  introData.forEach((n,i)=>{
+    const gray = Math.round(i/(L-1)*255);
+    const w = Math.round((n/total)*W);
+    ctx.fillStyle=`rgb(${gray},${gray},${gray})`;
+    ctx.fillRect(x,0,w,H); x+=w;
+  });
+}
+
+function loadPreset(name){
+  const presets={
+    dark:[150,120,90,50,20,10,5,5],
+    bright:[5,5,10,20,50,90,120,150],
+    'low-contrast':[10,20,60,90,90,60,20,10],
+    bimodal:[80,60,10,5,5,10,60,80],
+    random: Array.from({length:8},()=>Math.floor(Math.random()*150)+10)
+  };
+  introData=[...presets[name]];
+  buildIntroSliders();
+}
+
+// ==================== CONTINUOUS HE ====================
+let continuousPDFType = 'dark';
+
+function buildContinuousPDF(type) {
+  const n=100;
+  const xs=Array.from({length:n},(_,i)=>i/(n-1)*(L-1));
+  let ys;
+  switch(type){
+    case 'dark': ys=xs.map(x=>Math.exp(-x*0.7)); break;
+    case 'bright': ys=xs.map(x=>Math.exp(-(L-1-x)*0.7)); break;
+    case 'gaussian': ys=xs.map(x=>{ const m=(L-1)/2; return Math.exp(-0.5*((x-m)/(0.8))**2); }); break;
+    case 'bimodal': ys=xs.map(x=>{ const m1=(L-1)*0.25, m2=(L-1)*0.75; return 0.5*Math.exp(-0.5*((x-m1)/0.6)**2)+0.5*Math.exp(-0.5*((x-m2)/0.6)**2); }); break;
+  }
+  // Normalize
+  const dx=(L-1)/(n-1); const area=ys.reduce((a,b)=>a+b,0)*dx;
+  ys=ys.map(y=>y/area);
+  return {xs,ys};
+}
+
+function setContinuousPDF(type){
+  continuousPDFType=type;
+  const {xs,ys}=buildContinuousPDF(type);
+  drawCurve('cont-pdf',xs,ys,{color:'#4ecdc4',fill:'rgba(78,205,196,0.1)'});
+
+  // CDF
+  const dx=(L-1)/(xs.length-1);
+  let cdf=[0]; let cum=0;
+  for(let i=1;i<xs.length;i++){ cum+=ys[i]*dx; cdf.push(Math.min(1,cum)); }
+  const tys=cdf.map(c=>c*(L-1));
+  drawCurve('cont-cdf',xs,tys,{color:'#e8b94f',fill:'rgba(232,185,79,0.1)'});
+
+  // Output PDF (should be uniform)
+  const outYs=Array(xs.length).fill(1/(L-1));
+  drawCurve('cont-out',xs,outYs,{color:'#52c97a',fill:'rgba(82,201,122,0.1)'});
+}
+
+// ==================== DISCRETE HE ====================
+let discData=[0,0,0,0,0,0,0,0];
+let discStep_current=0;
+
+function buildDiscSliders(){
+  const c=document.getElementById('disc-sliders');
+  c.innerHTML='';
+  c.style.display='grid'; c.style.gridTemplateColumns='1fr 1fr'; c.style.gap='6px';
+  discData.forEach((v,i)=>{
+    const w=document.createElement('div');
+    w.className='slider-wrap'; w.style.marginBottom='2px';
+    w.innerHTML=`<label>r${i} pixels: <span id="ds${i}">${v}</span></label>
+    <input type="range" min="0" max="500" value="${v}" oninput="updateDisc(${i},this.value)">`;
+    c.appendChild(w);
+  });
+}
+
+function updateDisc(i,v){ discData[i]=+v; document.getElementById('ds'+i).textContent=v; discReset(); }
+
+function loadDiscPreset(name){
+  const p={
+    gonzalez:[790,1023,850,656,329,245,122,81], // classic textbook
+    dark:[500,400,300,200,100,50,20,10],
+    bright:[10,20,50,100,200,300,400,500],
+    low:[20,50,200,400,400,200,50,20],
+    random:Array.from({length:8},()=>Math.floor(Math.random()*400)+10)
+  };
+  discData=[...p[name]];
+  buildDiscSliders();
+  discReset();
+}
+
+function discReset(){
+  discStep_current=0;
+  document.getElementById('disc-table-area').innerHTML='';
+  document.getElementById('disc-chart-area').style.display='none';
+  document.getElementById('disc-rounding-area').style.display='none';
+  [1,2,3,4,5].forEach(i=>{
+    const b=document.getElementById('disc-btn-'+i);
+    b.disabled=(i!==1);
+    b.className=i===1?'btn':'btn secondary';
+  });
+}
+
+function discStep(n){
+  discStep_current=n;
+  [1,2,3,4,5].forEach(i=>{
+    const b=document.getElementById('disc-btn-'+i);
+    b.disabled=(i>n+1||i<1);
+    b.className=(i<=n)?'btn':'btn secondary';
+  });
+
+  const MN=discData.reduce((a,b)=>a+b,0)||1;
+  const pdf=discData.map(v=>v/MN);
+  let cdf=[]; let cum=0;
+  pdf.forEach(p=>{ cum+=p; cdf.push(cum); });
+  const sk=cdf.map(c=>Math.round((L-1)*c));
+
+  // Build table progressively
+  let html='<table><tr><th>rₖ</th><th>nₖ</th>';
+  if(n>=2) html+='<th>p(rₖ) = nₖ/MN</th>';
+  if(n>=3) html+='<th>CDF(k)</th>';
+  if(n>=4) html+='<th>(L−1)·CDF (exact)</th><th class="hl-purple">sₖ (rounded)</th>';
+  if(n>=5) html+='<th class="hl-green">Output Level</th>';
+  html+='</tr>';
+
+  discData.forEach((nk,k)=>{
+    const pStr=pdf[k].toFixed(4);
+    const cStr=cdf[k].toFixed(4);
+    const exact=((L-1)*cdf[k]).toFixed(4);
+    html+=`<tr><td class="hl">${k}</td><td>${nk}</td>`;
+    if(n>=2) html+=`<td>${pStr}</td>`;
+    if(n>=3) html+=`<td>${cStr}</td>`;
+    if(n>=4) html+=`<td>${exact}</td><td class="hl-purple">${sk[k]}</td>`;
+    if(n>=5) html+=`<td class="hl-green">${sk[k]}</td>`;
+    html+='</tr>';
+  });
+  html+=`</table><p class="annot" style="margin-top:6px">MN = ${MN} total pixels</p>`;
+  document.getElementById('disc-table-area').innerHTML=html;
+
+  if(n>=4){
+    document.getElementById('disc-rounding-area').style.display='block';
+    const cards=document.getElementById('disc-rounding-cards');
+    cards.innerHTML='';
+    discData.forEach((_,k)=>{
+      const exact=(L-1)*cdf[k];
+      const rounded=sk[k];
+      const isExact=Math.abs(exact-rounded)<0.001;
+      const d=document.createElement('div');
+      d.className='round-card'+(isExact?' exact':'');
+      d.innerHTML=`<div class="raw">r${k} → (7·${cdf[k].toFixed(3)})</div>
+      <div class="rv">${exact.toFixed(3)}</div>
+      <div class="rounded">→ <strong>${rounded}</strong> ${isExact?'✓ exact':''}</div>`;
+      cards.appendChild(d);
+    });
+  }
+
+  if(n>=5){
+    document.getElementById('disc-chart-area').style.display='block';
+    drawHistogram('disc-hist-in', discData, {color:'#3d4466', showVal:true});
+    // Build output histogram
+    const outHist=Array(L).fill(0);
+    discData.forEach((nk,k)=>{ outHist[sk[k]]+=nk; });
+    const colors=outHist.map((v,i)=>v>0?'#e8b94f':'#2a2f45');
+    drawHistogram('disc-hist-out', outHist, {colors, showVal:true});
+  }
+}
+
+// ==================== COMPARE PANEL ====================
+let showIdeal=false;
+const compareData=[790,1023,850,656,329,245,122,81];
+
+function buildCompareTable(){
+  const MN=compareData.reduce((a,b)=>a+b,0);
+  const pdf=compareData.map(v=>v/MN);
+  let cdf=[],cum=0;
+  pdf.forEach(p=>{cum+=p;cdf.push(cum);});
+  const sk=cdf.map(c=>Math.round((L-1)*c));
+  const skExact=cdf.map(c=>(L-1)*c);
+
+  let mergeNotes=[];
+  let table=document.getElementById('compare-table');
+  let html='<tr><th>k</th><th>nₖ</th><th>p(rₖ)</th><th>CDF(k)</th><th>7·CDF (exact)</th><th style="color:var(--purple)">sₖ (rounded)</th><th>Note</th></tr>';
+  const seen={};
+  sk.forEach((s,k)=>{
+    if(seen[s]!==undefined) mergeNotes.push(`r${seen[s]} and r${k} → both map to s=${s}`);
+    seen[s]=k;
+    const merged=Object.values(seen).filter(x=>x!==k).map(x=>sk[x]).includes(s);
+    html+=`<tr><td class="hl">${k}</td><td>${compareData[k]}</td><td>${pdf[k].toFixed(4)}</td>
+    <td>${cdf[k].toFixed(4)}</td><td>${skExact[k].toFixed(3)}</td>
+    <td class="hl-purple">${s}</td>
+    <td style="color:${merged?'var(--red)':'var(--green)'}; font-size:11px">${merged?'⚠ merged':''}</td></tr>`;
+  });
+  table.innerHTML=html;
+
+  const note=document.getElementById('compare-merge-note');
+  if(mergeNotes.length>0){
+    note.innerHTML='<strong>Merging detected!</strong> These input levels map to the same output (due to rounding):<br>'+mergeNotes.map(m=>`<em>${m}</em>`).join(', ');
+    note.style.display='block';
+  } else { note.style.display='none'; }
+
+  drawHistogram('compare-in', compareData, {color:'#3d4466'});
+  renderCompareOut(sk, pdf, cdf, MN);
+}
+
+function renderCompareOut(sk,pdf,cdf,MN){
+  if(showIdeal){
+    // Perfect uniform output
+    const uniform=Array(L).fill(MN/L);
+    drawHistogram('compare-out', uniform, {color:'#4ecdc4'});
+    document.getElementById('compare-out-label').textContent='Output Histogram (ideal continuous — perfectly uniform)';
+  } else {
+    const outHist=Array(L).fill(0);
+    compareData.forEach((nk,k)=>{ outHist[sk[k]]+=nk; });
+    const colors=outHist.map(v=>v>0?'#e8b94f':'#2a2f45');
+    drawHistogram('compare-out', outHist, {colors});
+    document.getElementById('compare-out-label').textContent='Output Histogram (discrete/rounded — NOT uniform)';
+  }
+}
+
+function toggleIdeal(){
+  showIdeal=!showIdeal;
+  const toggle=document.getElementById('ideal-toggle');
+  toggle.classList.toggle('on',showIdeal);
+  document.getElementById('ideal-toggle-label').textContent=showIdeal?'Showing: Ideal Continuous (uniform)':'Showing: Discrete (rounded)';
+  buildCompareTable();
+}
+
+// ==================== HISTOGRAM SPECIFICATION ====================
+let specInput=[150,120,90,50,20,10,5,5];
+let specTarget=[5,5,10,20,50,90,120,150];
+
+function buildSpecSliders(){
+  function makeSliders(id, data, updateFn, color){
+    const c=document.getElementById(id); c.innerHTML='';
+    c.style.display='grid'; c.style.gridTemplateColumns='1fr 1fr'; c.style.gap='4px';
+    data.forEach((v,i)=>{
+      const w=document.createElement('div'); w.className='slider-wrap'; w.style.marginBottom='0';
+      w.innerHTML=`<label style="font-size:11px">r${i}: <span id="${id}-v${i}">${v}</span></label>
+      <input type="range" min="0" max="200" value="${v}" oninput="${updateFn}(${i},this.value)">`;
+      c.appendChild(w);
+    });
+  }
+  makeSliders('spec-input-sliders', specInput, 'updateSpecInput', '#e8b94f');
+  makeSliders('spec-target-sliders', specTarget, 'updateSpecTarget', '#4ecdc4');
+  drawHistogram('spec-in-chart', specInput, {color:'#e8b94f'});
+  drawHistogram('spec-target-chart', specTarget, {color:'#4ecdc4'});
+}
+
+function updateSpecInput(i,v){ specInput[i]=+v; document.getElementById('spec-input-sliders-v'+i).textContent=v; drawHistogram('spec-in-chart',specInput,{color:'#e8b94f'}); document.getElementById('spec-result').style.display='none'; }
+function updateSpecTarget(i,v){ specTarget[i]=+v; document.getElementById('spec-target-sliders-v'+i).textContent=v; drawHistogram('spec-target-chart',specTarget,{color:'#4ecdc4'}); document.getElementById('spec-result').style.display='none'; }
+
+function specPreset(which,name){
+  const p={dark:[150,120,90,50,20,10,5,5],bright:[5,5,10,20,50,90,120,150],
+            low:[10,20,60,90,90,60,20,10],gaussian:[5,15,50,90,90,50,15,5]};
+  if(which==='input'){ specInput=[...p[name]]; buildSpecSliders(); }
+  else { specTarget=[...p[name]]; buildSpecSliders(); }
+}
+
+function computeDiscCDF(data){
+  const MN=data.reduce((a,b)=>a+b,0)||1;
+  const pdf=data.map(v=>v/MN);
+  let cdf=[],cum=0;
+  pdf.forEach(p=>{cum+=p;cdf.push(Math.min(1,cum));});
+  const sk=cdf.map(c=>Math.round((L-1)*c));
+  return {pdf,cdf,sk,MN};
+}
+
+function runSpec(){
+  const {pdf:pIn, cdf:cdfIn, sk:sIn}=computeDiscCDF(specInput);
+  const {pdf:pT, cdf:cdfT, sk:vk}=computeDiscCDF(specTarget);
+
+  // For each sIn[k], find closest vk
+  const zMap=sIn.map(s=>{
+    let best=0,bestD=Infinity;
+    vk.forEach((v,j)=>{ if(Math.abs(v-s)<bestD){ bestD=Math.abs(v-s); best=j; } });
+    return best;
+  });
+
+  // Build output histogram
+  const outHist=Array(L).fill(0);
+  specInput.forEach((nk,k)=>{ outHist[zMap[k]]+=nk; });
+
+  // Table
+  let html='<tr><th>rₖ</th><th>p(rₖ)</th><th style="color:var(--gold)">sₖ</th><th>pz(zₖ)</th><th style="color:var(--cyan)">vₖ</th><th style="color:var(--purple)">zₖ</th><th>r→z</th></tr>';
+  specInput.forEach((_,k)=>{
+    html+=`<tr><td class="hl">${k}</td><td>${pIn[k].toFixed(4)}</td>
+    <td class="hl">${sIn[k]}</td>
+    <td>${pT[k].toFixed(4)}</td>
+    <td class="hl-cyan">${vk[k]}</td>
+    <td class="hl-purple">${zMap[k]}</td>
+    <td style="font-size:11px; color:var(--text-dim)">${k}→${zMap[k]}</td></tr>`;
+  });
+  document.getElementById('spec-table').innerHTML=html;
+
+  // Chart: input, target, output
+  const spec_canvas=document.getElementById('spec-out-chart');
+  const ctx=spec_canvas.getContext('2d');
+  const W=spec_canvas.width, H=spec_canvas.height;
+  ctx.fillStyle='#1c2030'; ctx.fillRect(0,0,W,H);
+  // Draw 3 histograms side by side
+  const panelW=Math.floor(W/3)-8;
+  function drawMini(data, x0, color, label){
+    const maxV=Math.max(...data,1);
+    const bw=panelW/L;
+    data.forEach((v,i)=>{
+      const bh=(v/maxV)*(H-30);
+      ctx.fillStyle=color; ctx.fillRect(x0+i*bw+1, H-30-bh, bw-2, bh);
+      ctx.fillStyle='#3d4466'; ctx.font='9px JetBrains Mono'; ctx.textAlign='center';
+      ctx.fillText(i, x0+i*bw+bw/2, H-16);
+    });
+    ctx.fillStyle='#6b748f'; ctx.font='10px JetBrains Mono'; ctx.textAlign='center';
+    ctx.fillText(label, x0+panelW/2, H-2);
+    ctx.strokeStyle=color; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+    ctx.strokeRect(x0-2, 2, panelW+4, H-20);
+    ctx.setLineDash([]);
+  }
+  drawMini(specInput, 4, '#e8b94f', 'Input');
+  drawMini(specTarget, panelW+12, '#4ecdc4', 'Target');
+  drawMini(outHist, (panelW+8)*2+4, '#a78bfa', 'Output');
+
+  document.getElementById('spec-result').style.display='block';
+}
+
+// ==================== LOCAL PROCESSING ====================
+const gridSize=8;
+let localImg=[];
+let localCenter=[3,3];
+let localWindowHalf=1; // 3x3
+
+function initLocalGrid(){
+  // Generate a simple image: dark top-left, bright bottom-right with a bright spot
+  localImg=[];
+  for(let r=0;r<gridSize;r++){
+    const row=[];
+    for(let c=0;c<gridSize;c++){
+      let v=Math.floor((r+c)/(2*(gridSize-1))*(L-1));
+      // Add a bright spot
+      if(r>=2&&r<=3&&c>=5&&c<=6) v=7;
+      row.push(v);
+    }
+    localImg.push(row);
+  }
+  renderLocalGrid();
+}
+
+function setWindowSize(v){
+  localWindowHalf=[0,1,2][+v-1];
+  const sizes=['1×1','3×3','5×5'];
+  document.getElementById('window-size-label').textContent=sizes[+v-1];
+  renderLocalGrid();
+}
+
+function renderLocalGrid(){
+  const container=document.getElementById('local-grid');
+  container.innerHTML='';
+  const [cr,cc]=localCenter;
+  const h=localWindowHalf;
+  for(let r=0;r<gridSize;r++){
+    for(let c=0;c<gridSize;c++){
+      const cell=document.createElement('div');
+      cell.className='kernel-cell';
+      const v=localImg[r][c];
+      const isCenter=(r===cr&&c===cc);
+      const isNeighbor=Math.abs(r-cr)<=h&&Math.abs(c-cc)<=h&&!isCenter;
+      const gray=Math.round(v/(L-1)*200);
+      if(isCenter) cell.classList.add('center');
+      else if(isNeighbor) cell.classList.add('neighbor');
+      else cell.classList.add('inactive');
+      cell.style.background=isCenter?'rgba(232,185,79,0.2)':isNeighbor?'rgba(78,205,196,0.12)':`rgb(${gray},${gray},${gray})`;
+      cell.textContent=v;
+      cell.title=`Pixel (${r},${c}) = ${v}`;
+      cell.onclick=()=>{ localCenter=[r,c]; renderLocalGrid(); };
+      container.appendChild(cell);
+    }
+  }
+  // Compute local histogram
+  const localHist=Array(L).fill(0);
+  const [r0,c0]=localCenter;
+  const neighbors=[];
+  for(let r=r0-h;r<=r0+h;r++){
+    for(let c=c0-h;c<=c0+h;c++){
+      if(r>=0&&r<gridSize&&c>=0&&c<gridSize){
+        localHist[localImg[r][c]]++;
+        neighbors.push(localImg[r][c]);
+      }
+    }
+  }
+  const winSize=(2*h+1);
+  const actual=neighbors.length;
+  drawHistogram('local-hist', localHist, {color:'#4ecdc4', showVal:true});
+  // CDF and transform center
+  const MN=neighbors.length;
+  let cum=0; let sk=-1;
+  const cv=localImg[r0][c0];
+  for(let k=0;k<=cv;k++){ cum+=localHist[k]/MN; if(k===cv) sk=Math.round((L-1)*cum); }
+  document.getElementById('local-info').innerHTML=
+    `Center: (${r0},${c0}) = <strong style="color:var(--gold)">${cv}</strong> &nbsp;|&nbsp; Window pixels: ${actual} &nbsp;|&nbsp; Equalized value: <strong style="color:var(--green)">${sk}</strong>`;
+}
+
+// ==================== TAB SWITCHING ====================
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  const tabs={
+    intro:0,'heq-cont':1,'heq-disc':2,compare:3,hspec:4,local:5
+  };
+  document.querySelectorAll('.tab')[tabs[name]].classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+
+  // Init on first visit
+  if(name==='heq-cont') setContinuousPDF('dark');
+  if(name==='compare') buildCompareTable();
+  if(name==='hspec') { if(!document.getElementById('spec-input-sliders').innerHTML) buildSpecSliders(); }
+  if(name==='local') { if(!document.getElementById('local-grid').innerHTML) initLocalGrid(); }
+}
+
+// ==================== INIT ====================
+buildIntroSliders();
+loadPreset('dark');
+loadDiscPreset('gonzalez');
+buildDiscSliders();
+discReset();
+
+</script>
+</body>
+</html>
