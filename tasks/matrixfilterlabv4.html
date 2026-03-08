@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matrix Filter Lab v4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f8f7f4;
+  --surface: #ffffff;
+  --surface2: #f2f0ec;
+  --surface3: #eae8e2;
+  --border: #ddd9d0;
+  --border2: #c8c3b8;
+  --ink: #1a1814;
+  --ink2: #4a4640;
+  --ink3: #8a8078;
+  --teal: #0d7377;
+  --teal-light: #e0f4f4;
+  --teal-mid: #4db8bc;
+  --orange: #d4601a;
+  --orange-light: #fdf0e8;
+  --orange-mid: #e8955a;
+  --blue: #1a4f8a;
+  --blue-light: #e8f0fb;
+  --blue-mid: #5a8fd4;
+  --red: #c0392b;
+  --red-light: #fdecea;
+  --green: #1a7a45;
+  --green-light: #e8f7ee;
+  --purple: #6c3483;
+  --purple-light: #f5eefb;
+  --gold: #c9962a;
+  --gold-light: #fdf6e3;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
+  --serif: 'Playfair Display', Georgia, serif;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'DM Sans', system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; scroll-behavior: smooth; }
+body {
+  font-family: var(--sans);
+  background: linear-gradient(180deg, #fbfaf8 0%, #f4f1eb 100%);
+  color: var(--ink);
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--surface2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--ink3); }
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(26,24,20,0.10);
+}
+.topbar-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 14px 18px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.logo-mark {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  color: white;
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.subtitle {
+  font-size: 12px;
+  color: var(--ink3);
+  font-family: var(--mono);
+  letter-spacing: 0.08em;
+}
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.hdr-chip {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink2);
+  white-space: nowrap;
+}
+.hdr-chip.active { background: var(--teal-light); color: var(--teal); border-color: var(--teal-mid); }
+
+.jumpbar {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 18px 14px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.jumpbar a {
+  text-decoration: none;
+  color: var(--ink2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 12px;
+}
+.jumpbar a:hover { color: var(--teal); border-color: var(--teal-mid); background: var(--teal-light); }
+
+.shell {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 18px;
+  display: grid;
+  grid-template-columns: minmax(340px, 430px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: sticky;
+  top: 124px;
+}
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid rgba(26,24,20,0.08);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.card-header {
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, #fff 0%, #faf8f5 100%);
+}
+.card-kicker {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); display: inline-block; }
+.card-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.card-title { font-family: var(--serif); font-size: 24px; font-weight: 600; color: var(--ink); }
+.card-note { color: var(--ink3); font-size: 12px; font-family: var(--mono); }
+.card-body { padding: 18px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.stack-8 { display: flex; flex-direction: column; gap: 8px; }
+.stack-12 { display: flex; flex-direction: column; gap: 12px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; min-width: 0; }
+.grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; min-width: 0; }
+.section-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--ink3);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-panel {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  padding: 14px;
+  min-width: 0;
+}
+.helper { font-size: 12px; color: var(--ink3); line-height: 1.6; }
+
+.size-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.size-btn, .preset-btn, .tgl-btn, .btn, .btn-run, select.ctrl-select {
+  min-height: 40px;
+}
+.size-btn {
+  padding: 8px 12px;
+  border: 1.5px solid var(--border2);
+  border-radius: 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--ink2);
+  transition: all 0.15s;
+}
+.size-btn:hover { border-color: var(--teal); color: var(--teal); }
+.size-btn.active { background: var(--teal); border-color: var(--teal); color: white; }
+
+.preset-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+.preset-btn {
+  padding: 10px 8px;
+  border: 1.5px solid var(--border2);
+  border-radius: 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  text-align: center;
+  background: var(--surface);
+  color: var(--ink2);
+  transition: all 0.15s;
+  line-height: 1.3;
+}
+.preset-btn:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-light); }
+.preset-btn.active { border-color: var(--teal); background: var(--teal); color: white; }
+
+.ctrl-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.btn {
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+}
+.btn-secondary { border-color: var(--border2); color: var(--ink2); }
+.btn-secondary:hover { border-color: var(--ink); color: var(--ink); }
+.btn-run {
+  background: linear-gradient(135deg, var(--teal) 0%, #0a9396 100%);
+  color: white;
+  border: none;
+  padding: 11px 18px;
+  border-radius: 12px;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(13,115,119,0.22);
+}
+.btn-run:hover { transform: translateY(-1px); }
+
+.toggle-group { display: flex; border: 1.5px solid var(--border2); border-radius: 12px; overflow: hidden; width: fit-content; max-width: 100%; }
+.tgl-btn {
+  padding: 8px 14px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--ink2);
+  border: none;
+  border-right: 1px solid var(--border2);
+  transition: all 0.15s;
+  flex: 1 1 auto;
+}
+.tgl-btn:last-child { border-right: none; }
+.tgl-btn.active { background: var(--ink); color: white; }
+
+select.ctrl-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border2);
+  border-radius: 12px;
+  font-family: var(--sans);
+  font-size: 13px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  outline: none;
+}
+select.ctrl-select:focus { border-color: var(--teal); }
+
+input[type=range].ctrl-range {
+  -webkit-appearance: none;
+  height: 6px;
+  background: var(--border);
+  border-radius: 999px;
+  outline: none;
+  flex: 1;
+}
+input[type=range].ctrl-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px; height: 20px; border-radius: 50%; background: var(--teal); border: 2px solid white; box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+input[type=range].ctrl-range::-moz-range-thumb {
+  width: 20px; height: 20px; border-radius: 50%; background: var(--teal); border: 2px solid white; box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.param-row { display: flex; align-items: center; gap: 10px; }
+.param-label { font-family: var(--mono); font-size: 11px; color: var(--ink2); min-width: 70px; }
+.param-val { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--teal); min-width: 42px; text-align: right; }
+
+.matrix-grid {
+  display: inline-grid;
+  gap: 2px;
+  border: 2px solid var(--ink);
+  padding: 4px;
+  background: var(--ink);
+  border-radius: 10px;
+  max-width: 100%;
+}
+.mcell {
+  width: 38px; height: 38px;
+  border: none;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  outline: none;
+  transition: background 0.15s, box-shadow 0.15s;
+  color: var(--ink);
+  appearance: textfield;
+}
+.mcell::-webkit-inner-spin-button, .mcell::-webkit-outer-spin-button { display: none; }
+.mcell:focus { box-shadow: 0 0 0 2px var(--teal); z-index: 2; }
+.mcell.highlight-input { box-shadow: 0 0 0 2px var(--teal) inset; z-index: 3; }
+.mcell.highlight-active { box-shadow: 0 0 0 2px var(--orange) inset; z-index: 4; }
+.out-cell-active { background: var(--orange-light) !important; box-shadow: 0 0 0 2px var(--orange) !important; }
+
+.matrix-scroll, .h-scroll { overflow-x: auto; overflow-y: hidden; padding-bottom: 4px; }
+canvas.heatmap { border: 1px solid var(--border); border-radius: 12px; display: block; image-rendering: pixelated; background: white; max-width: 100%; height: auto; }
+.heatmap-wrap { display: flex; flex-direction: column; gap: 8px; }
+.colorbar-wrap { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 10px; color: var(--ink3); }
+.colorbar { height: 10px; flex: 1; border-radius: 999px; border: 1px solid var(--border); background: linear-gradient(90deg, #000814, #023e8a, #0077b6, #00b4d8, #90e0ef, #ffffff); }
+
+.stats-bar { display: flex; gap: 14px; flex-wrap: wrap; }
+.stat-item { display: flex; flex-direction: column; gap: 2px; }
+.stat-label { font-family: var(--mono); font-size: 9px; color: var(--ink3); text-transform: uppercase; letter-spacing: .08em; }
+.stat-val { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--teal); }
+
+.kernel-grid { display: inline-grid; gap: 4px; padding: 2px; }
+.kcell {
+  width: 46px; height: 46px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+}
+.kcell.kcenter { border: 2px solid var(--ink); }
+.kcell.kpos { background: var(--blue-light); color: var(--blue); }
+.kcell.kneg { background: var(--red-light); color: var(--red); }
+.kcell.kzero { background: var(--surface2); color: var(--ink3); }
+.kcell.kflip { outline: 2px dashed var(--orange); }
+.kernel-info {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.kernel-rule { font-size: 12px; color: var(--ink2); line-height: 1.6; }
+.formula-display { font-family: var(--mono); font-size: 11px; color: var(--teal); background: var(--teal-light); border: 1px solid var(--teal-mid); border-radius: 10px; padding: 8px 10px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 999px; font-family: var(--mono); font-size: 10px; font-weight: 700; }
+.chip-sym { background: var(--green-light); color: var(--green); }
+.chip-asym { background: var(--orange-light); color: var(--orange); }
+.op-diff-box { background: var(--gold-light); border: 1px solid var(--gold); border-radius: 12px; padding: 10px 12px; font-size: 12px; color: var(--ink2); line-height: 1.65; }
+.pad-select-wrap { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.instruct-box {
+  background: var(--blue-light);
+  border: 1px solid var(--blue-mid);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--blue);
+  line-height: 1.6;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.instruct-icon { font-size: 16px; flex-shrink: 0; }
+.output-grid { display: grid; grid-template-columns: minmax(0,1fr) 260px; gap: 16px; align-items: start; }
+.output-side { display: flex; flex-direction: column; gap: 12px; }
+
+.step-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; min-width: 0; }
+.step-section {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--surface);
+  min-width: 0;
+}
+.step-section-header {
+  padding: 10px 14px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink3);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.step-section-body { padding: 14px; min-height: 150px; overflow: auto; }
+.nb-grid { display: inline-grid; gap: 3px; }
+.nb-cell { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 13px; font-weight: 700; border-radius: 8px; border: 1px solid var(--border); }
+.nb-cell.nb-active { background: var(--teal-light); border-color: var(--teal); color: var(--teal); }
+.comp-table { border-collapse: collapse; font-family: var(--mono); font-size: 12px; width: 100%; }
+.comp-table th { padding: 5px 8px; text-align: center; font-weight: 700; color: var(--ink2); border-bottom: 1.5px solid var(--ink); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+.comp-table td { padding: 5px 8px; text-align: center; border-bottom: 1px solid var(--border); }
+.comp-table tr.sum-row td { border-top: 1.5px solid var(--ink); font-weight: 700; color: var(--teal); background: var(--teal-light); }
+.comp-table .td-pos { color: var(--blue); }
+.comp-table .td-neg { color: var(--red); }
+.comp-table .td-product { color: var(--green); font-weight: 700; }
+.step-list { display: flex; flex-direction: column; gap: 8px; }
+.step-item { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 10px; background: var(--surface2); border: 1px solid var(--border); font-size: 12px; line-height: 1.5; }
+.step-item.step-active { background: var(--teal-light); border-color: var(--teal); }
+.step-num2 { width: 20px; height: 20px; background: var(--ink); color: white; border-radius: 50%; font-family: var(--mono); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.step-item.step-active .step-num2 { background: var(--teal); }
+
+@media (max-width: 1100px) {
+  .shell { grid-template-columns: 1fr; }
+  .sidebar { position: static; top: auto; }
+}
+@media (max-width: 820px) {
+  .topbar-inner { padding: 12px 14px; }
+  .jumpbar { padding: 0 14px 12px; }
+  .shell { padding: 14px; }
+  .output-grid { grid-template-columns: 1fr; }
+  .step-grid { grid-template-columns: 1fr; }
+  .preset-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (max-width: 560px) {
+  .logo { font-size: 20px; }
+  .subtitle { display: none; }
+  .topbar-right { width: 100%; margin-left: 0; }
+  .hdr-chip { font-size: 10px; padding: 6px 8px; }
+  .card-title { font-size: 20px; }
+  .mcell { width: 34px; height: 34px; font-size: 11px; }
+  .kcell { width: 40px; height: 40px; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div>
+        <div class="logo"><div class="logo-mark">⊛</div>Matrix Filter Lab v4</div>
+        <div class="subtitle">Root redesign — continuous scroll, no hidden panels, one stable responsive layout</div>
+      </div>
+      <div class="topbar-right">
+        <div class="hdr-chip" id="hdrOp">Operation: —</div>
+        <div class="hdr-chip" id="hdrFilter">Filter: —</div>
+        <div class="hdr-chip active" id="hdrSize">Matrix: 8×8</div>
+      </div>
+    </div>
+    <div class="jumpbar">
+      <a href="#inputCard">Input</a>
+      <a href="#filterCard">Filter</a>
+      <a href="#outputCard">Output</a>
+      <a href="#inspectCard">Inspector</a>
+    </div>
+  </div>
+
+  <main class="shell">
+    <aside class="sidebar">
+      <section class="card" id="inputCard">
+        <div class="card-header">
+          <div class="card-kicker"><span class="dot"></span>1 · Input Setup</div>
+          <div class="card-title-row">
+            <div class="card-title">Image Matrix</div>
+            <div class="card-note">Everything important stays visible</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="section-panel stack-12">
+            <div class="section-title"><span class="dot"></span>Matrix Size</div>
+            <div class="size-btns">
+              <button class="size-btn" data-size="6" onclick="resizeMatrix(6)">6×6</button>
+              <button class="size-btn active" data-size="8" onclick="resizeMatrix(8)">8×8</button>
+              <button class="size-btn" data-size="10" onclick="resizeMatrix(10)">10×10</button>
+              <button class="size-btn" data-size="12" onclick="resizeMatrix(12)">12×12</button>
+            </div>
+          </div>
+
+          <div class="section-panel stack-12">
+            <div class="section-title"><span class="dot"></span>Preset Patterns</div>
+            <div id="presetGrid" class="preset-grid"></div>
+            <div class="ctrl-row">
+              <button class="btn btn-secondary" onclick="shuffleMatrix()">🔀 Shuffle</button>
+              <button class="btn btn-secondary" onclick="clearMatrix()">✕ Clear</button>
+              <button class="btn btn-secondary" onclick="randomMatrix()">⚄ Random</button>
+            </div>
+          </div>
+
+          <div class="section-panel stack-12">
+            <div class="section-title"><span class="dot"></span>Numeric Matrix <span id="matrixDimLabel" style="color:var(--teal);font-size:11px"></span></div>
+            <div class="h-scroll">
+              <div id="imageMatrixWrap" style="display:flex;align-items:center;gap:14px;padding:4px 0; min-width:max-content;">
+                <div id="imageMatrix" class="matrix-grid"></div>
+              </div>
+            </div>
+            <p class="helper">Edit any cell directly. The matrix remains in the normal page flow, so it will not disappear behind a collapsed panel.</p>
+          </div>
+
+          <div class="section-panel stack-12">
+            <div class="section-title"><span class="dot"></span>Input Heatmap</div>
+            <div class="heatmap-wrap">
+              <canvas id="heatmapOrig" class="heatmap" width="240" height="240"></canvas>
+              <div class="colorbar-wrap"><span>0</span><div class="colorbar"></div><span>255</span></div>
+            </div>
+            <div class="stats-bar" id="origStats"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="filterCard">
+        <div class="card-header">
+          <div class="card-kicker"><span class="dot" style="background:var(--orange)"></span>2 · Filter Setup</div>
+          <div class="card-title-row">
+            <div class="card-title">Operation & Kernel</div>
+            <div class="card-note">Compact, but never hidden</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="section-panel stack-12">
+            <div class="section-title"><span class="dot" style="background:var(--orange)"></span>Operation Type</div>
+            <div class="toggle-group" id="opToggle">
+              <button class="tgl-btn active" data-op="convolution" onclick="setOperation('convolution')">⊛ Convolution</button>
+              <button class="tgl-btn" data-op="correlation" onclick="setOperation('correlation')">★ Correlation</button>
+            </div>
+            <div class="op-diff-box" id="opDiffBox">
+              <strong>Convolution:</strong> kernel is rotated 180° before sliding. For symmetric kernels (Gaussian, Box), the result is identical to correlation.
+            </div>
+          </div>
+
+          <div class="section-panel stack-12">
+            <div class="section-title"><span class="dot" style="background:var(--orange)"></span>Filter Type</div>
+            <select class="ctrl-select" id="filterSelect" onchange="selectFilter(this.value)">
+              <optgroup label="Linear · Smoothing">
+                <option value="average">Average (Box) Filter</option>
+                <option value="weighted">Weighted Average Filter</option>
+                <option value="gaussian">Gaussian Filter</option>
+              </optgroup>
+              <optgroup label="Linear · Sharpening">
+                <option value="laplacian4">Laplacian (4-neighbor)</option>
+                <option value="laplacian8">Laplacian (8-neighbor)</option>
+                <option value="sharpen">Sharpening (Laplacian enhanced)</option>
+                <option value="sobel_x">Sobel – Horizontal (Gx)</option>
+                <option value="sobel_y">Sobel – Vertical (Gy)</option>
+                <option value="prewitt_x">Prewitt – Horizontal (Gx)</option>
+                <option value="prewitt_y">Prewitt – Vertical (Gy)</option>
+                <option value="highboost">High-boost Filter</option>
+              </optgroup>
+              <optgroup label="Nonlinear · Order-statistic">
+                <option value="median">Median Filter</option>
+                <option value="max">Max Filter</option>
+                <option value="min">Min Filter</option>
+                <option value="range">Range Filter</option>
+              </optgroup>
+            </select>
+            <div id="filterParams" class="stack-8"></div>
+          </div>
+
+          <div class="section-panel stack-12">
+            <div class="section-title"><span class="dot" style="background:var(--purple)"></span>Kernel Matrix <span id="kernelSymChip"></span></div>
+            <div class="h-scroll">
+              <div id="kernelWrap" style="display:flex;flex-direction:column;gap:8px;align-items:flex-start; min-width:max-content;">
+                <div id="kernelGrid" class="kernel-grid"></div>
+                <div id="kernelFlipNote" style="font-family:var(--mono);font-size:10px;color:var(--ink3);display:none">↺ Kernel rotated 180° for convolution</div>
+              </div>
+            </div>
+            <div class="kernel-info">
+              <div class="kernel-rule" id="kernelRuleText">Select a filter to see how its kernel is calculated.</div>
+              <div class="formula-display" id="kernelFormula">—</div>
+            </div>
+          </div>
+
+          <div class="section-panel stack-12">
+            <div class="section-title"><span class="dot" style="background:var(--blue)"></span>Edge Padding</div>
+            <div class="pad-select-wrap">
+              <select class="ctrl-select" id="padSelect" onchange="state.padMode=this.value">
+                <option value="reflect">Reflect (Mirror)</option>
+                <option value="zero">Zero Padding</option>
+                <option value="replicate">Replicate (Clamp)</option>
+                <option value="wrap">Wrap (Circular)</option>
+              </select>
+              <div id="padExplain" class="helper" style="flex:1">Border pixels are mirrored.</div>
+            </div>
+            <button class="btn-run" onclick="runFilter()">▶ Run Filter</button>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <section class="main">
+      <section class="card" id="outputCard">
+        <div class="card-header">
+          <div class="card-kicker"><span class="dot" style="background:var(--green)"></span>3 · Output</div>
+          <div class="card-title-row">
+            <div class="card-title">Result View</div>
+            <div class="card-note" id="outDesc">Click any output cell to inspect its computation</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="instruct-box" id="instructBox">
+            <span class="instruct-icon">💡</span>
+            <span>Configure the matrix and filter, then click <strong>Run Filter</strong>. After the result appears, click any output cell to see the full step-by-step computation below.</span>
+          </div>
+
+          <div class="output-grid">
+            <div class="section-panel stack-12">
+              <div class="section-title"><span class="dot" style="background:var(--orange)"></span>Output Values <span id="outClampNote" style="color:var(--ink3)"></span></div>
+              <div class="h-scroll">
+                <div id="outputMatrixWrap" style="display:flex;align-items:center;gap:14px;padding:4px 0; min-width:max-content;">
+                  <div id="outputMatrix" class="matrix-grid"></div>
+                </div>
+              </div>
+              <div class="stats-bar" id="outStats"></div>
+            </div>
+
+            <div class="output-side">
+              <div class="section-panel stack-12">
+                <div class="section-title"><span class="dot" style="background:var(--orange)"></span>Output Heatmap</div>
+                <canvas id="heatmapOut" class="heatmap" width="240" height="240"></canvas>
+                <div class="colorbar-wrap"><span>0</span><div class="colorbar"></div><span>255</span></div>
+              </div>
+              <div class="section-panel stack-12">
+                <div class="section-title"><span class="dot" style="background:var(--purple)"></span>Difference Map</div>
+                <canvas id="heatmapDiff" class="heatmap" width="240" height="120" style="width:100%;height:120px"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="inspectCard">
+        <div class="card-header">
+          <div class="card-kicker"><span class="dot" style="background:var(--purple)"></span>4 · Inspector</div>
+          <div class="card-title-row">
+            <div class="card-title">Step-by-Step Computation</div>
+            <div class="card-note">Always visible below the output</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="step-grid">
+            <div class="step-section">
+              <div class="step-section-header"><span style="color:var(--teal)">◆</span>A. Input Neighborhood</div>
+              <div class="step-section-body" id="stepNeighborhood">
+                <div style="color:var(--ink3);font-family:var(--mono);font-size:11px;padding:8px 0">Click an output cell to inspect</div>
+              </div>
+            </div>
+
+            <div class="step-section">
+              <div class="step-section-header"><span style="color:var(--orange)">◆</span>B. Kernel Applied</div>
+              <div class="step-section-body" id="stepKernel">
+                <div style="color:var(--ink3);font-family:var(--mono);font-size:11px;padding:8px 0">Click an output cell to inspect</div>
+              </div>
+            </div>
+
+            <div class="step-section">
+              <div class="step-section-header"><span style="color:var(--green)">◆</span>C. Element-wise Multiplication &amp; Sum</div>
+              <div class="step-section-body" id="stepComputation">
+                <div style="color:var(--ink3);font-family:var(--mono);font-size:11px;padding:8px 0">Each neighborhood pixel × kernel weight → sum = output value</div>
+              </div>
+            </div>
+
+            <div class="step-section">
+              <div class="step-section-header"><span style="color:var(--purple)">◆</span>D. Result &amp; Process Steps</div>
+              <div class="step-section-body" id="stepResult">
+                <div class="step-list" id="stepList">
+                  <div class="step-item">
+                    <div class="step-num2">?</div>
+                    <span style="color:var(--ink3)">Run the filter then click an output cell.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+<script>
+
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+let state = {
+  matrixSize: 8,
+  imageMatrix: [],
+  outputMatrix: [],
+  currentFilter: 'average',
+  operation: 'convolution',
+  padMode: 'reflect',
+  sigma: 1.0,
+  boostA: 1.5,
+  selectedCell: null,
+  kernelMatrix: [],
+  kernelSize: 3,
+  isNonlinear: false,
+  currentPreset: 'edge',
+};
+
+// ═══════════════════════════════════════════════════
+//  FILTER DEFINITIONS
+// ═══════════════════════════════════════════════════
+const filterDefs = {
+  average: {
+    name: 'Average (Box) Filter',
+    type: 'linear', symmetric: true,
+    kSize: 3, hasKSize: true,
+    params: [],
+    rule: `Every element = <strong>1/k²</strong> where k is the kernel side length. For 3×3: each of 9 weights = <strong>1/9 ≈ 0.111</strong>. The kernel sums to exactly 1 (preserves mean brightness).`,
+    formula: 'h[i,j] = 1/k²   for all i,j in [0..k-1]',
+    getKernel: (k) => { const v=1/(k*k); return Array(k*k).fill(v); },
+  },
+  weighted: {
+    name: 'Weighted Average',
+    type: 'linear', symmetric: true,
+    kSize: 3, hasKSize: true,
+    params: [],
+    rule: `Weight of cell (i,j) = <strong>(h+1−|i−c|)·(h+1−|j−c|)</strong> where c=center, h=half-size. Center gets highest weight. Normalized so sum=1.`,
+    formula: 'h[i,j] = (h+1−|i−c|)·(h+1−|j−c|) / Z',
+    getKernel: (k) => {
+      const half=Math.floor(k/2), ks=[];
+      for(let j=0;j<k;j++) for(let i=0;i<k;i++) ks.push((half+1-Math.abs(i-half))*(half+1-Math.abs(j-half)));
+      const s=ks.reduce((a,b)=>a+b,0); return ks.map(v=>v/s);
+    },
+  },
+  gaussian: {
+    name: 'Gaussian Filter',
+    type: 'linear', symmetric: true,
+    kSize: 3, hasKSize: true,
+    params: [{id:'sigma',label:'σ (sigma)',min:0.3,max:3,step:0.1,default:1.0}],
+    rule: `Each weight = <strong>e^(−(i²+j²)/(2σ²))</strong> centered at kernel origin. Bell-shaped falloff. <em>Larger σ</em> = wider blur. Normalized so sum=1. Separable: can be computed as two 1D passes.`,
+    formula: 'h[i,j] = exp(−(i²+j²)/(2σ²)) / Z',
+    getKernel: (k, p) => {
+      const s=p.sigma||1.0, half=Math.floor(k/2), ks=[];
+      for(let j=-half;j<=half;j++) for(let i=-half;i<=half;i++) ks.push(Math.exp(-(i*i+j*j)/(2*s*s)));
+      const sum=ks.reduce((a,b)=>a+b,0); return ks.map(v=>v/sum);
+    },
+  },
+  laplacian4: {
+    name: 'Laplacian (4-neighbor)',
+    type: 'linear', symmetric: true,
+    kSize: 3, hasKSize: false,
+    params: [],
+    rule: `Approximates <strong>∇²f = ∂²f/∂x² + ∂²f/∂y²</strong> using 4 neighbors. The four cardinal neighbors get weight <em>+1</em>, center gets <em>−4</em>. Sum = 0 (zero mean — response is 0 in flat regions).`,
+    formula: 'h = [0,1,0; 1,−4,1; 0,1,0]   ΣΣh = 0',
+    getKernel: () => [0,1,0, 1,-4,1, 0,1,0],
+  },
+  laplacian8: {
+    name: 'Laplacian (8-neighbor)',
+    type: 'linear', symmetric: true,
+    kSize: 3, hasKSize: false,
+    params: [],
+    rule: `All 8 neighbors included. Each neighbor weight = <em>+1</em>, center = <em>−8</em>. More isotropic than 4-neighbor. Diagonal elements connect pixels at distance √2.`,
+    formula: 'h = [1,1,1; 1,−8,1; 1,1,1]   ΣΣh = 0',
+    getKernel: () => [1,1,1, 1,-8,1, 1,1,1],
+  },
+  sharpen: {
+    name: 'Laplacian-based Sharpening',
+    type: 'linear', symmetric: true,
+    kSize: 3, hasKSize: false,
+    params: [],
+    rule: `Sharpened = f − ∇²f. This embeds the subtraction into one kernel: center = <strong>5</strong> (= 1 + 4 for 4-neighbor Laplacian), neighbors = <em>−1</em>. A single convolution pass achieves both operations.`,
+    formula: 'h = [0,−1,0; −1,5,−1; 0,−1,0]   (identity − Laplacian4)',
+    getKernel: () => [0,-1,0, -1,5,-1, 0,-1,0],
+  },
+  sobel_x: {
+    name: 'Sobel – Horizontal Gx',
+    type: 'linear', symmetric: false,
+    kSize: 3, hasKSize: false,
+    params: [],
+    rule: `Detects vertical edges (change in x direction). Left column = <em>−1,−2,−1</em>, right = <em>+1,+2,+2</em>. Middle column = 0. The <strong>2</strong> in center row gives slight Gaussian smoothing in y. ΣΣh = 0.`,
+    formula: 'Kx = [−1,0,+1; −2,0,+2; −1,0,+1]   ← antisymmetric in x',
+    getKernel: () => [-1,0,1, -2,0,2, -1,0,1],
+  },
+  sobel_y: {
+    name: 'Sobel – Vertical Gy',
+    type: 'linear', symmetric: false,
+    kSize: 3, hasKSize: false,
+    params: [],
+    rule: `Detects horizontal edges (change in y direction). Top row = <em>−1,−2,−1</em>, bottom = <em>+1,+2,+1</em>. Transpose of Kx. The <strong>2</strong> center weights add Gaussian smoothing in x direction.`,
+    formula: 'Ky = [−1,−2,−1; 0,0,0; +1,+2,+1]   ← antisymmetric in y',
+    getKernel: () => [-1,-2,-1, 0,0,0, 1,2,1],
+  },
+  prewitt_x: {
+    name: 'Prewitt – Horizontal Gx',
+    type: 'linear', symmetric: false,
+    kSize: 3, hasKSize: false,
+    params: [],
+    rule: `Like Sobel-x but with <strong>uniform column weights [1,1,1]</strong> instead of Gaussian-weighted [1,2,1]. Simpler but slightly noisier. Pure finite difference in x, averaged over y rows.`,
+    formula: 'Kx = [−1,0,+1; −1,0,+1; −1,0,+1]   ← uniform rows',
+    getKernel: () => [-1,0,1, -1,0,1, -1,0,1],
+  },
+  prewitt_y: {
+    name: 'Prewitt – Vertical Gy',
+    type: 'linear', symmetric: false,
+    kSize: 3, hasKSize: false,
+    params: [],
+    rule: `Like Prewitt-x but transposed. Uniform row averaging in y. ΣΣh = 0. Directional derivative in y approximated by finite differences.`,
+    formula: 'Ky = [−1,−1,−1; 0,0,0; +1,+1,+1]   ← uniform columns',
+    getKernel: () => [-1,-1,-1, 0,0,0, 1,1,1],
+  },
+  highboost: {
+    name: 'High-boost Filter',
+    type: 'linear', symmetric: true,
+    kSize: 3, hasKSize: true,
+    params: [{id:'sigma',label:'σ (blur)',min:0.3,max:3,step:0.1,default:1.0},{id:'boostA',label:'A (boost)',min:1,max:5,step:0.1,default:1.5}],
+    rule: `Kernel = <strong>A·δ − h_gaussian</strong> where δ is the identity impulse. Equivalent to: g = A·f − blur(f). With <em>A=1</em>: pure high-pass. <em>A>1</em>: high-boost (preserves original + adds edges).`,
+    formula: 'h_hb[i,j] = A·δ[i,j] − h_gauss[i,j]   (A ≥ 1)',
+    getKernel: (k, p) => {
+      const s=p.sigma||1.0, A=p.boostA||1.5, half=Math.floor(k/2);
+      const gk=[];
+      for(let j=-half;j<=half;j++) for(let i=-half;i<=half;i++) gk.push(Math.exp(-(i*i+j*j)/(2*s*s)));
+      const sum=gk.reduce((a,b)=>a+b,0);
+      const gnorm=gk.map(v=>v/sum);
+      // Identity impulse
+      const hb=gnorm.map(v=>-v);
+      const ci=half*k+half;
+      hb[ci]+=A;
+      return hb;
+    },
+  },
+  median: {
+    name: 'Median Filter',
+    type: 'nonlinear', symmetric: true,
+    kSize: 3, hasKSize: true,
+    params: [],
+    rule: `No fixed kernel — a <strong>nonlinear order-statistic</strong> filter. For each neighborhood, sort all k² values. Pick the <em>middle value</em> (rank k²/2). Cannot be expressed as convolution.`,
+    formula: 'g[x,y] = median{ f[x+i, y+j] : i,j ∈ [−h..h] }',
+    getKernel: (k) => null,
+  },
+  max: {
+    name: 'Max Filter',
+    type: 'nonlinear', symmetric: true,
+    kSize: 3, hasKSize: true,
+    params: [],
+    rule: `Output = <strong>maximum</strong> pixel value in neighborhood. Removes pepper (dark) noise. Morphological dilation of the image. All k² values are compared; no weighting is applied.`,
+    formula: 'g[x,y] = max{ f[x+i, y+j] : i,j ∈ [−h..h] }',
+    getKernel: (k) => null,
+  },
+  min: {
+    name: 'Min Filter',
+    type: 'nonlinear', symmetric: true,
+    kSize: 3, hasKSize: true,
+    params: [],
+    rule: `Output = <strong>minimum</strong> pixel value in neighborhood. Removes salt (bright) noise. Morphological erosion. Complement of max filter.`,
+    formula: 'g[x,y] = min{ f[x+i, y+j] : i,j ∈ [−h..h] }',
+    getKernel: (k) => null,
+  },
+  range: {
+    name: 'Range Filter',
+    type: 'nonlinear', symmetric: true,
+    kSize: 3, hasKSize: true,
+    params: [],
+    rule: `Output = <strong>max − min</strong> of the neighborhood. Measures local intensity spread/contrast. Zero in flat regions, high at edges. Simple nonlinear edge detector.`,
+    formula: 'g[x,y] = max{Sxy} − min{Sxy}   (local contrast)',
+    getKernel: (k) => null,
+  },
+};
+
+// Params for current filter
+let filterParams = { sigma: 1.0, boostA: 1.5 };
+
+// ═══════════════════════════════════════════════════
+//  PRESET IMAGE PATTERNS
+// ═══════════════════════════════════════════════════
+const presets = {
+  'Edge': (n) => {
+    const m=[]; for(let r=0;r<n;r++){for(let c=0;c<n;c++) m.push(c<n/2?0:255);}
+    return m;
+  },
+  'Gradient': (n) => {
+    const m=[]; for(let r=0;r<n;r++) for(let c=0;c<n;c++) m.push(Math.round(c*(255/(n-1))));
+    return m;
+  },
+  'Checkerboard': (n) => {
+    const m=[]; for(let r=0;r<n;r++) for(let c=0;c<n;c++) m.push(((r+c)%2===0)?220:30);
+    return m;
+  },
+  'Bright Dot': (n) => {
+    const m=[]; const cx=Math.floor(n/2), cy=Math.floor(n/2);
+    for(let r=0;r<n;r++) for(let c=0;c<n;c++) m.push((Math.abs(r-cy)<=1&&Math.abs(c-cx)<=1)?255:20);
+    return m;
+  },
+  'Corner': (n) => {
+    const m=[]; for(let r=0;r<n;r++) for(let c=0;c<n;c++) m.push((r<n/3&&c<n/3)?220:50);
+    return m;
+  },
+  'Diagonal': (n) => {
+    const m=[]; for(let r=0;r<n;r++) for(let c=0;c<n;c++) m.push(Math.round(255*(r+c)/(2*(n-1))));
+    return m;
+  },
+  'Noisy': (n) => {
+    return Array(n*n).fill(0).map(()=>Math.floor(Math.random()*256));
+  },
+  'Salt & Pepper': (n) => {
+    const m=[]; for(let r=0;r<n;r++) for(let c=0;c<n;c++){
+      const rand=Math.random();
+      m.push(rand<0.1?0:rand<0.2?255:Math.round(100+Math.random()*80));
+    }
+    return m;
+  },
+  'Circle': (n) => {
+    const m=[]; const cx=(n-1)/2, cy=(n-1)/2, r=n/2.5;
+    for(let row=0;row<n;row++) for(let col=0;col<n;col++){
+      const d=Math.sqrt((col-cx)**2+(row-cy)**2);
+      m.push(d<=r?220:30);
+    }
+    return m;
+  },
+};
+
+// ═══════════════════════════════════════════════════
+//  MATRIX OPERATIONS
+// ═══════════════════════════════════════════════════
+function resizeMatrix(n) {
+  state.matrixSize=n;
+  document.querySelectorAll('.size-btn').forEach(b=>b.classList.toggle('active',+b.dataset.size===n));
+  document.getElementById('hdrSize').textContent=`Matrix: ${n}×${n}`;
+  document.getElementById('matrixDimLabel').textContent=`${n}×${n}`;
+  // Regenerate with current preset or random
+  state.imageMatrix = presets[state.currentPreset] ? presets[state.currentPreset](n) : randomArr(n);
+  renderImageMatrix();
+  renderHeatmap('heatmapOrig', state.imageMatrix, n);
+  renderStats('origStats', state.imageMatrix);
+  clearOutput();
+}
+
+function randomArr(n) { return Array(n*n).fill(0).map(()=>Math.floor(Math.random()*256)); }
+
+function shuffleMatrix() {
+  const keys=Object.keys(presets);
+  const key=keys[Math.floor(Math.random()*keys.length)];
+  state.currentPreset=key;
+  state.imageMatrix=presets[key](state.matrixSize);
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.toggle('active',b.dataset.preset===key));
+  renderImageMatrix();
+  renderHeatmap('heatmapOrig', state.imageMatrix, state.matrixSize);
+  renderStats('origStats', state.imageMatrix);
+  clearOutput();
+}
+
+function clearMatrix() {
+  state.imageMatrix=Array(state.matrixSize*state.matrixSize).fill(0);
+  renderImageMatrix();
+  renderHeatmap('heatmapOrig', state.imageMatrix, state.matrixSize);
+  clearOutput();
+}
+
+function randomMatrix() {
+  state.currentPreset='Random';
+  state.imageMatrix=randomArr(state.matrixSize);
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  renderImageMatrix();
+  renderHeatmap('heatmapOrig', state.imageMatrix, state.matrixSize);
+  clearOutput();
+}
+
+function applyPreset(key) {
+  state.currentPreset=key;
+  state.imageMatrix=presets[key](state.matrixSize);
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.toggle('active',b.dataset.preset===key));
+  renderImageMatrix();
+  renderHeatmap('heatmapOrig', state.imageMatrix, state.matrixSize);
+  renderStats('origStats', state.imageMatrix);
+  clearOutput();
+}
+
+// ═══════════════════════════════════════════════════
+//  RENDER MATRICES
+// ═══════════════════════════════════════════════════
+function renderImageMatrix() {
+  const n=state.matrixSize;
+  const grid=document.getElementById('imageMatrix');
+  grid.innerHTML='';
+  grid.style.gridTemplateColumns=`repeat(${n},34px)`;
+  state.imageMatrix.forEach((val,idx)=>{
+    const inp=document.createElement('input');
+    inp.type='number'; inp.min=0; inp.max=255;
+    inp.value=val; inp.className='mcell';
+    // Background based on value
+    inp.style.background=grayToColor(val);
+    inp.style.color=val>128?'#1a1814':'#ffffff';
+    inp.dataset.idx=idx;
+    inp.addEventListener('input', function(){
+      const v=Math.max(0,Math.min(255,+this.value||0));
+      state.imageMatrix[idx]=v;
+      this.style.background=grayToColor(v);
+      this.style.color=v>128?'#1a1814':'#ffffff';
+      renderHeatmap('heatmapOrig', state.imageMatrix, n);
+      renderStats('origStats', state.imageMatrix);
+    });
+    inp.addEventListener('focus', function() { this.select(); });
+    grid.appendChild(inp);
+  });
+}
+
+function renderOutputMatrix(data, n) {
+  const grid=document.getElementById('outputMatrix');
+  grid.innerHTML='';
+  grid.style.gridTemplateColumns=`repeat(${n},34px)`;
+  const clamped=data.map(v=>Math.max(0,Math.min(255,Math.round(v))));
+  clamped.forEach((val,idx)=>{
+    const cell=document.createElement('div');
+    cell.className='mcell';
+    cell.textContent=val;
+    cell.style.background=grayToColor(val);
+    cell.style.color=val>128?'#1a1814':'#ffffff';
+    cell.style.cursor='pointer';
+    cell.style.display='flex'; cell.style.alignItems='center'; cell.style.justifyContent='center';
+    cell.style.borderRadius='2px';
+    cell.dataset.idx=idx;
+    cell.addEventListener('click', ()=>inspectCell(idx, data, n));
+    grid.appendChild(cell);
+  });
+}
+
+function grayToColor(v) {
+  // Blue-white colormap
+  const t=v/255;
+  const r=Math.round(8+t*(248-8));
+  const g=Math.round(14+t*(248-14));
+  const b=Math.round(54+t*(252-54));
+  return `rgb(${r},${g},${b})`;
+}
+
+// ═══════════════════════════════════════════════════
+//  HEATMAP RENDERING
+// ═══════════════════════════════════════════════════
+function renderHeatmap(canvasId, data, n, isDiff=false) {
+  const canvas=document.getElementById(canvasId);
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  const cellW=W/n, cellH=H/n;
+  ctx.clearRect(0,0,W,H);
+  const maxVal=isDiff?Math.max(...data,1):255;
+  data.forEach((v,idx)=>{
+    const col=idx%n, row=Math.floor(idx/n);
+    const x=col*cellW, y=row*cellH;
+    if(isDiff){
+      const t=v/maxVal;
+      const r=Math.round(255*Math.min(1,t*2));
+      const g=Math.round(255*Math.max(0,1-t*2));
+      ctx.fillStyle=`rgb(${r},${g},50)`;
+    } else {
+      const t=v/255;
+      // Blue colormap: dark blue → cyan → white
+      const r=Math.round(8+t*247), g=Math.round(14+t*234), b=Math.round(54+t*198);
+      ctx.fillStyle=`rgb(${r},${g},${b})`;
+    }
+    ctx.fillRect(x,y,cellW,cellH);
+    // Grid lines
+    ctx.strokeStyle='rgba(0,0,0,0.08)';
+    ctx.lineWidth=0.5;
+    ctx.strokeRect(x,y,cellW,cellH);
+    // Value text if cells big enough
+    if(cellW>20){
+      ctx.fillStyle=v>128&&!isDiff?'rgba(0,0,0,0.6)':'rgba(255,255,255,0.85)';
+      ctx.font=`${Math.min(11,cellW*0.35)}px JetBrains Mono, monospace`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(Math.round(v), x+cellW/2, y+cellH/2);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  STATS
+// ═══════════════════════════════════════════════════
+function computeStats(data) {
+  const n=data.length;
+  const mean=data.reduce((a,b)=>a+b,0)/n;
+  const variance=data.reduce((a,b)=>a+(b-mean)**2,0)/n;
+  const std=Math.sqrt(variance);
+  const min=Math.min(...data), max=Math.max(...data);
+  return {mean:mean.toFixed(1), std:std.toFixed(1), min, max};
+}
+
+function renderStats(elId, data) {
+  const s=computeStats(data);
+  const el=document.getElementById(elId);
+  el.innerHTML=`
+    <div class="stat-item"><div class="stat-label">Mean</div><div class="stat-val">${s.mean}</div></div>
+    <div class="stat-item"><div class="stat-label">Std Dev</div><div class="stat-val">${s.std}</div></div>
+    <div class="stat-item"><div class="stat-label">Min</div><div class="stat-val">${s.min}</div></div>
+    <div class="stat-item"><div class="stat-label">Max</div><div class="stat-val">${s.max}</div></div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════
+//  PADDING
+// ═══════════════════════════════════════════════════
+function getPadded(mat, N, x, y, mode) {
+  if(mode==='zero'){
+    if(x<0||x>=N||y<0||y>=N) return 0;
+  } else if(mode==='reflect'){
+    x=x<0?-x:(x>=N?2*N-x-2:x); y=y<0?-y:(y>=N?2*N-y-2:y);
+    x=Math.max(0,Math.min(N-1,x)); y=Math.max(0,Math.min(N-1,y));
+  } else if(mode==='replicate'){
+    x=Math.max(0,Math.min(N-1,x)); y=Math.max(0,Math.min(N-1,y));
+  } else if(mode==='wrap'){
+    x=((x%N)+N)%N; y=((y%N)+N)%N;
+  }
+  return mat[y*N+x];
+}
+
+// ═══════════════════════════════════════════════════
+//  FILTER COMPUTATION
+// ═══════════════════════════════════════════════════
+function getCurrentKernel() {
+  const fd=filterDefs[state.currentFilter];
+  if(fd.type==='nonlinear') return null;
+  const kSize=state.kernelSize||fd.kSize||3;
+  return fd.getKernel(kSize, filterParams);
+}
+
+function getEffectiveKernel() {
+  // For convolution, rotate 180°
+  const k=getCurrentKernel();
+  if(!k) return null;
+  if(state.operation==='convolution'){
+    return [...k].reverse();
+  }
+  return k;
+}
+
+function applyLinearFilter(mat, N, kernel, kSize, padMode) {
+  const out=[];
+  const half=Math.floor(kSize/2);
+  for(let y=0;y<N;y++){
+    for(let x=0;x<N;x++){
+      let sum=0;
+      for(let jj=-half;jj<=half;jj++){
+        for(let ii=-half;ii<=half;ii++){
+          const ki=state.operation==='convolution'?
+            (half-jj)*kSize+(half-ii):
+            (jj+half)*kSize+(ii+half);
+          const fv=getPadded(mat,N,x+ii,y+jj,padMode);
+          sum+=kernel[ki]*fv;
+        }
+      }
+      out.push(sum);
+    }
+  }
+  return out;
+}
+
+function applyNonlinearFilter(mat, N, kSize, padMode, type) {
+  const out=[];
+  const half=Math.floor(kSize/2);
+  for(let y=0;y<N;y++){
+    for(let x=0;x<N;x++){
+      const vals=[];
+      for(let jj=-half;jj<=half;jj++) for(let ii=-half;ii<=half;ii++) vals.push(getPadded(mat,N,x+ii,y+jj,padMode));
+      vals.sort((a,b)=>a-b);
+      const n2=vals.length;
+      if(type==='median') out.push(vals[Math.floor(n2/2)]);
+      else if(type==='max') out.push(vals[n2-1]);
+      else if(type==='min') out.push(vals[0]);
+      else if(type==='range') out.push(vals[n2-1]-vals[0]);
+    }
+  }
+  return out;
+}
+
+function runFilter() {
+  const fd=filterDefs[state.currentFilter];
+  const N=state.matrixSize;
+  const mat=state.imageMatrix;
+  const padMode=state.padMode;
+  const kSize=state.kernelSize||fd.kSize||3;
+  document.getElementById('instructBox').style.display='none';
+
+  let output;
+  if(fd.type==='nonlinear'){
+    output=applyNonlinearFilter(mat,N,kSize,padMode,state.currentFilter);
+  } else {
+    const kernel=getCurrentKernel();
+    output=applyLinearFilter(mat,N,kernel,kSize,padMode);
+  }
+  state.outputMatrix=output;
+
+  const clamped=output.map(v=>Math.max(0,Math.min(255,Math.round(v))));
+  renderOutputMatrix(output, N);
+  renderHeatmap('heatmapOut', clamped, N);
+  renderStats('outStats', clamped);
+  // Diff
+  const diff=mat.map((v,i)=>Math.abs(v-clamped[i]));
+  renderHeatmap('heatmapDiff', diff, N, true);
+  document.getElementById('outDesc').textContent=`${N}×${N} output · click any cell ↓`;
+
+  // Check if any values were clamped
+  const clampedCount=output.filter(v=>v<0||v>255).length;
+  document.getElementById('outClampNote').textContent=clampedCount>0?`⚠ ${clampedCount} values clamped`:'';
+}
+
+// ═══════════════════════════════════════════════════
+//  CELL INSPECTION (step-by-step)
+// ═══════════════════════════════════════════════════
+function inspectCell(idx, rawOutput, N) {
+  state.selectedCell=idx;
+  const fd=filterDefs[state.currentFilter];
+  const kSize=state.kernelSize||fd.kSize||3;
+  const half=Math.floor(kSize/2);
+  const row=Math.floor(idx/N), col=idx%N;
+  const padMode=state.padMode;
+
+  // Highlight output cell
+  document.querySelectorAll('#outputMatrix .mcell').forEach((c,i)=>c.classList.toggle('out-cell-active',i===idx));
+
+  // Highlight input neighborhood
+  const nbIndices=[];
+  for(let jj=-half;jj<=half;jj++) for(let ii=-half;ii<=half;ii++){
+    const nr=row+jj, nc=col+ii;
+    if(nr>=0&&nr<N&&nc>=0&&nc<N) nbIndices.push(nr*N+nc);
+    else nbIndices.push(-1);
+  }
+  document.querySelectorAll('#imageMatrix .mcell').forEach((c,i)=>{
+    c.classList.toggle('highlight-input', nbIndices.includes(i));
+    c.classList.toggle('highlight-active', i===idx);
+  });
+
+  if(fd.type==='nonlinear'){
+    renderNonlinearInspect(idx, N, kSize, padMode, row, col, half);
+  } else {
+    renderLinearInspect(idx, N, kSize, padMode, row, col, half);
+  }
+}
+
+function renderLinearInspect(idx, N, kSize, padMode, row, col, half) {
+  const fd=filterDefs[state.currentFilter];
+  const kernel=getCurrentKernel();
+  const effKernel=getEffectiveKernel();
+
+  // Collect neighborhood values
+  const nbVals=[];
+  for(let jj=-half;jj<=half;jj++) for(let ii=-half;ii<=half;ii++) nbVals.push(getPadded(state.imageMatrix,N,col+ii,row+jj,padMode));
+
+  // Section A: Neighborhood
+  const nbGrid=document.getElementById('stepNeighborhood');
+  let nbHTML=`<div style="font-family:var(--mono);font-size:10px;color:var(--ink3);margin-bottom:8px">f[${row},${col}] neighborhood (${kSize}×${kSize})</div>`;
+  nbHTML+=`<div class="nb-grid" style="grid-template-columns:repeat(${kSize},36px)">`;
+  nbVals.forEach((v,i)=>{
+    const isCenter=(i===Math.floor(kSize*kSize/2));
+    nbHTML+=`<div class="nb-cell ${isCenter?'nb-active':''}">${v}</div>`;
+  });
+  nbHTML+=`</div>`;
+  nbHTML+=`<div style="font-family:var(--mono);font-size:10px;color:var(--ink3);margin-top:8px">[row,col] = [${row},${col}]</div>`;
+  nbGrid.innerHTML=nbHTML;
+
+  // Section B: Kernel
+  const kGrid=document.getElementById('stepKernel');
+  const isFlipped=state.operation==='convolution';
+  let kHTML=`<div style="font-family:var(--mono);font-size:10px;color:var(--ink3);margin-bottom:8px">${isFlipped?'Kernel rotated 180° (convolution)':'Kernel as-is (correlation)'}</div>`;
+  kHTML+=`<div class="nb-grid" style="grid-template-columns:repeat(${kSize},36px)">`;
+  effKernel.forEach((v,i)=>{
+    const isCenter=(i===Math.floor(kSize*kSize/2));
+    const dispVal=Math.abs(v)<0.001?'0':v>0?'+'+v.toFixed(3):v.toFixed(3);
+    const bg=v>0.001?'var(--blue-light)':v<-0.001?'var(--red-light)':'var(--surface2)';
+    const color=v>0.001?'var(--blue)':v<-0.001?'var(--red)':'var(--ink3)';
+    kHTML+=`<div class="nb-cell" style="background:${bg};color:${color};font-size:10px;border:1px solid var(--border)${isCenter?';border:2px solid var(--ink)':''}">
+      ${dispVal}
+    </div>`;
+  });
+  kHTML+=`</div>`;
+  if(isFlipped&&!fd.symmetric) kHTML+=`<div style="margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--orange);padding:4px 8px;background:var(--orange-light);border-radius:3px">⚠ This kernel is asymmetric — rotation changes the result vs correlation!</div>`;
+  if(fd.symmetric) kHTML+=`<div style="margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--green);padding:4px 8px;background:var(--green-light);border-radius:3px">✓ Symmetric kernel: conv = corr here</div>`;
+  kGrid.innerHTML=kHTML;
+
+  // Section C: Computation table
+  const compDiv=document.getElementById('stepComputation');
+  let products=[];
+  let sum=0;
+  let tableHTML=`<table class="comp-table"><thead><tr><th>Position (i,j)</th><th>Pixel f[·,·]</th><th>Kernel h[·,·]</th><th>Product</th></tr></thead><tbody>`;
+  let ki=0;
+  for(let jj=-half;jj<=half;jj++){
+    for(let ii=-half;ii<=half;ii++){
+      const fv=nbVals[ki];
+      const hv=effKernel[ki];
+      const prod=fv*hv;
+      sum+=prod;
+      const dispH=Math.abs(hv)<0.001?'0':hv.toFixed(4);
+      const dispP=prod.toFixed(2);
+      const pClass=prod>0?'td-pos':prod<0?'td-neg':'';
+      tableHTML+=`<tr>
+        <td style="color:var(--ink3)">(${jj>=0?'+':''}${jj},${ii>=0?'+':''}${ii})</td>
+        <td>${fv}</td>
+        <td class="${hv>0.001?'td-pos':hv<-0.001?'td-neg':''}">${dispH}</td>
+        <td class="${pClass} td-product">${dispP}</td>
+      </tr>`;
+      ki++;
+    }
+  }
+  const clamped=Math.max(0,Math.min(255,Math.round(sum)));
+  tableHTML+=`<tr class="sum-row"><td colspan="3">Σ (sum of products)</td><td>${sum.toFixed(2)}</td></tr>`;
+  tableHTML+=`<tr class="sum-row"><td colspan="3">Clamped to [0,255]</td><td>${clamped}</td></tr>`;
+  tableHTML+=`</tbody></table>`;
+  compDiv.innerHTML=tableHTML;
+
+  // Section D: Result + steps
+  const resDiv=document.getElementById('stepResult');
+  let stepsHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+      <div style="font-family:var(--mono);font-size:12px;color:var(--ink3)">g[${row},${col}] =</div>
+      <div class="result-value-box">${clamped}</div>
+      ${sum!==clamped?`<div style="font-family:var(--mono);font-size:10px;color:var(--orange)">raw=${sum.toFixed(1)}<br>→ clamped</div>`:''}
+    </div>
+    <div class="step-list">
+      <div class="step-item step-active"><div class="step-num2">1</div><span>Extract ${kSize}×${kSize} neighborhood centered at [${row},${col}] using <strong>${padMode}</strong> padding at borders</span></div>
+      <div class="step-item step-active"><div class="step-num2">2</div><span>${state.operation==='convolution'?'Rotate kernel 180° (flip both axes) — this is what distinguishes convolution from correlation':'Use kernel as-is — this is cross-correlation'}</span></div>
+      <div class="step-item step-active"><div class="step-num2">3</div><span>Multiply each of the ${kSize*kSize} pixel-kernel pairs element-wise: Σ f[i,j]·h[i,j]</span></div>
+      <div class="step-item step-active"><div class="step-num2">4</div><span>Sum all ${kSize*kSize} products → <strong>${sum.toFixed(2)}</strong></span></div>
+      <div class="step-item step-active"><div class="step-num2">5</div><span>Clamp to valid range [0,255] → <strong style="color:var(--teal)">${clamped}</strong></span></div>
+    </div>`;
+  resDiv.innerHTML=stepsHTML;
+}
+
+function renderNonlinearInspect(idx, N, kSize, padMode, row, col, half) {
+  const fd=filterDefs[state.currentFilter];
+
+  // Collect neighborhood
+  const nbVals=[];
+  for(let jj=-half;jj<=half;jj++) for(let ii=-half;ii<=half;ii++) nbVals.push(getPadded(state.imageMatrix,N,col+ii,row+jj,padMode));
+  const sorted=[...nbVals].sort((a,b)=>a-b);
+  const n2=nbVals.length;
+
+  // Section A: Neighborhood
+  document.getElementById('stepNeighborhood').innerHTML=`
+    <div style="font-family:var(--mono);font-size:10px;color:var(--ink3);margin-bottom:8px">Neighborhood at [${row},${col}]</div>
+    <div class="nb-grid" style="grid-template-columns:repeat(${kSize},36px)">
+      ${nbVals.map((v,i)=>`<div class="nb-cell ${i===Math.floor(n2/2)?'nb-active':''}">${v}</div>`).join('')}
+    </div>`;
+
+  // Section B: Sorted values
+  const midIdx=Math.floor(n2/2);
+  document.getElementById('stepKernel').innerHTML=`
+    <div style="font-family:var(--mono);font-size:10px;color:var(--ink3);margin-bottom:8px">Sorted values (${n2} elements):</div>
+    <div style="display:flex;flex-wrap:wrap;gap:3px">
+      ${sorted.map((v,i)=>{
+        const isResult=
+          (state.currentFilter==='median'&&i===midIdx)||
+          (state.currentFilter==='max'&&i===n2-1)||
+          (state.currentFilter==='min'&&i===0);
+        return `<div style="padding:4px 8px;border-radius:3px;font-family:var(--mono);font-size:11px;font-weight:${isResult?700:400};background:${isResult?'var(--teal-light)':'var(--surface2)'};color:${isResult?'var(--teal)':'var(--ink2)'};border:1px solid ${isResult?'var(--teal)':'var(--border)'}">${v}</div>`;
+      }).join('')}
+    </div>
+    <div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--purple);padding:4px 8px;background:var(--purple-light);border-radius:3px">
+      ★ No kernel matrix — order-statistic filter
+    </div>`;
+
+  // Result
+  let result, resultLabel;
+  if(state.currentFilter==='median'){result=sorted[midIdx];resultLabel=`median = sorted[${midIdx}]`;}
+  else if(state.currentFilter==='max'){result=sorted[n2-1];resultLabel='max = sorted[last]';}
+  else if(state.currentFilter==='min'){result=sorted[0];resultLabel='min = sorted[0]';}
+  else {result=sorted[n2-1]-sorted[0];resultLabel=`range = max(${sorted[n2-1]}) − min(${sorted[0]})`;}
+
+  document.getElementById('stepComputation').innerHTML=`
+    <div style="font-family:var(--mono);font-size:11px;color:var(--ink2);margin-bottom:10px">
+      Nonlinear operations cannot be expressed as a dot product.<br>They operate on the <strong>rank order</strong> of neighborhood values.
+    </div>
+    <table class="comp-table">
+      <thead><tr><th>Statistic</th><th>Value</th><th>Position in Sort</th></tr></thead>
+      <tbody>
+        <tr><td>Minimum</td><td>${sorted[0]}</td><td>rank 0</td></tr>
+        <tr><td>Median</td><td>${sorted[midIdx]}</td><td>rank ${midIdx}</td></tr>
+        <tr><td>Maximum</td><td>${sorted[n2-1]}</td><td>rank ${n2-1}</td></tr>
+        <tr><td>Range</td><td>${sorted[n2-1]-sorted[0]}</td><td>max − min</td></tr>
+        <tr class="sum-row"><td colspan="2">→ ${resultLabel}</td><td>${result}</td></tr>
+      </tbody>
+    </table>`;
+
+  document.getElementById('stepResult').innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <div style="font-family:var(--mono);font-size:12px;color:var(--ink3)">g[${row},${col}] =</div>
+      <div class="result-value-box">${result}</div>
+    </div>
+    <div class="step-list">
+      <div class="step-item step-active"><div class="step-num2">1</div><span>Collect all ${n2} values from ${kSize}×${kSize} neighborhood</span></div>
+      <div class="step-item step-active"><div class="step-num2">2</div><span>Sort in ascending order: O(${n2}·log${n2}) ≈ O(${(n2*Math.log2(n2)).toFixed(0)}) comparisons</span></div>
+      <div class="step-item step-active"><div class="step-num2">3</div><span>${resultLabel} = <strong style="color:var(--teal)">${result}</strong></span></div>
+      <div class="step-item step-active"><div class="step-num2">4</div><span>No convolution/correlation applies — this is a <strong>nonlinear</strong> operation</span></div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+//  FILTER SELECTION & KERNEL RENDERING
+// ═══════════════════════════════════════════════════
+function selectFilter(key) {
+  state.currentFilter=key;
+  const fd=filterDefs[key];
+  state.isNonlinear=fd.type==='nonlinear';
+  state.kernelSize=fd.kSize||3;
+
+  document.getElementById('hdrFilter').textContent=`Filter: ${fd.name}`;
+
+  // Params UI
+  const paramsDiv=document.getElementById('filterParams');
+  paramsDiv.innerHTML='';
+  if(fd.params&&fd.params.length>0){
+    fd.params.forEach(p=>{
+      const row=document.createElement('div');
+      row.className='param-row';
+      const valSpan=document.createElement('span');
+      valSpan.className='param-val';
+      valSpan.id=`param-val-${p.id}`;
+      valSpan.textContent=filterParams[p.id]||p.default;
+      const lbl=document.createElement('span');
+      lbl.className='param-label';
+      lbl.textContent=p.label;
+      const sl=document.createElement('input');
+      sl.type='range'; sl.min=p.min; sl.max=p.max; sl.step=p.step;
+      sl.value=filterParams[p.id]||p.default;
+      sl.className='ctrl-range';
+      sl.addEventListener('input',function(){
+        filterParams[p.id]=+this.value;
+        valSpan.textContent=(+this.value).toFixed(p.step<1?1:0);
+        renderKernelGrid();
+      });
+      row.appendChild(lbl); row.appendChild(sl); row.appendChild(valSpan);
+      paramsDiv.appendChild(row);
+    });
+  }
+
+  // Kernel size selector (if applicable)
+  if(fd.hasKSize){
+    const row=document.createElement('div');
+    row.className='param-row';
+    const lbl=document.createElement('span'); lbl.className='param-label'; lbl.textContent='k (kernel)';
+    const valSpan=document.createElement('span'); valSpan.className='param-val'; valSpan.id='ksizeVal'; valSpan.textContent=`${state.kernelSize}×${state.kernelSize}`;
+    const sl=document.createElement('input');
+    sl.type='range'; sl.min=1; sl.max=4; sl.step=1; sl.value=Math.floor(state.kernelSize/2);
+    sl.className='ctrl-range';
+    sl.addEventListener('input',function(){
+      const sizes=[3,5,7,9];
+      state.kernelSize=sizes[+this.value-1];
+      valSpan.textContent=`${state.kernelSize}×${state.kernelSize}`;
+      renderKernelGrid();
+    });
+    row.appendChild(lbl); row.appendChild(sl); row.appendChild(valSpan);
+    paramsDiv.appendChild(row);
+  }
+
+  // Symmetry chip
+  const symChip=document.getElementById('kernelSymChip');
+  symChip.innerHTML=fd.type==='nonlinear'?
+    '<span class="chip" style="background:var(--purple-light);color:var(--purple)">nonlinear</span>':
+    fd.symmetric?
+    '<span class="chip chip-sym">symmetric</span>':
+    '<span class="chip chip-asym">asymmetric</span>';
+
+  renderKernelGrid();
+  renderKernelInfo();
+  clearOutput();
+}
+
+function renderKernelGrid() {
+  const fd=filterDefs[state.currentFilter];
+  const kSize=state.kernelSize;
+  const kGrid=document.getElementById('kernelGrid');
+  kGrid.innerHTML='';
+  kGrid.style.gridTemplateColumns=`repeat(${kSize},42px)`;
+
+  if(fd.type==='nonlinear'){
+    const half=Math.floor(kSize/2);
+    for(let j=0;j<kSize;j++) for(let i=0;i<kSize;i++){
+      const cell=document.createElement('div');
+      cell.className='kcell '+(i===half&&j===half?'kcenter':'kzero');
+      const labels={'median':'M','max':'↑','min':'↓','range':'↕'};
+      cell.textContent=i===half&&j===half?(labels[state.currentFilter]||'·'):'·';
+      kGrid.appendChild(cell);
+    }
+    document.getElementById('kernelFlipNote').style.display='none';
+    return;
+  }
+
+  const kernel=getCurrentKernel();
+  const effKernel=getEffectiveKernel();
+  const half=Math.floor(kSize/2);
+  const maxAbs=Math.max(...kernel.map(Math.abs),0.001);
+  const isFlipped=state.operation==='convolution'&&!fd.symmetric;
+
+  kernel.forEach((v,i)=>{
+    const ev=effKernel[i];
+    const cell=document.createElement('div');
+    const isCenter=(i===half*kSize+half);
+    let cls='kcell ';
+    if(v>0.001) cls+='kpos';
+    else if(v<-0.001) cls+='kneg';
+    else cls+='kzero';
+    if(isCenter) cls+=' kcenter';
+    cell.className=cls;
+    if(isFlipped) cell.classList.add('kflip');
+    const disp=Math.abs(v)<0.001?'0':v>0?'+'+v.toFixed(3):v.toFixed(3);
+    cell.textContent=disp;
+    // Opacity based on magnitude
+    const mag=Math.abs(v)/maxAbs;
+    cell.style.opacity=0.3+mag*0.7;
+    kGrid.appendChild(cell);
+  });
+  document.getElementById('kernelFlipNote').style.display=
+    (state.operation==='convolution'&&!fd.symmetric)?'block':'none';
+}
+
+function renderKernelInfo() {
+  const fd=filterDefs[state.currentFilter];
+  document.getElementById('kernelRuleText').innerHTML=fd.rule;
+  document.getElementById('kernelFormula').textContent=fd.formula;
+}
+
+// ═══════════════════════════════════════════════════
+//  OPERATION
+// ═══════════════════════════════════════════════════
+function setOperation(op) {
+  state.operation=op;
+  document.querySelectorAll('#opToggle .tgl-btn').forEach(b=>b.classList.toggle('active',b.dataset.op===op));
+  document.getElementById('hdrOp').textContent=op==='convolution'?'Operation: Convolution ⊛':'Operation: Correlation ★';
+  const diffBox=document.getElementById('opDiffBox');
+  if(op==='convolution'){
+    diffBox.innerHTML=`<strong>Convolution (⊛):</strong> The kernel is rotated 180° before sliding across the image. Formula: g[x,y] = Σ h[u,v] · f[x−u, y−v]. For <em>symmetric kernels</em>, this equals correlation.`;
+  } else {
+    diffBox.innerHTML=`<strong>Correlation (★):</strong> Kernel slides as-is, no rotation. Formula: g[x,y] = Σ h[u,v] · f[x+u, y+v]. Equivalent to a template-matching operation. <em>Asymmetric kernels give different results than convolution.</em>`;
+  }
+  renderKernelGrid();
+  clearOutput();
+}
+
+function clearOutput() {
+  const grid=document.getElementById('outputMatrix');
+  grid.innerHTML='';
+  const ctx=document.getElementById('heatmapOut').getContext('2d');
+  ctx.clearRect(0,0,200,200);
+  const ctx2=document.getElementById('heatmapDiff').getContext('2d');
+  ctx2.clearRect(0,0,ctx2.canvas.width,ctx2.canvas.height);
+  document.getElementById('outStats').innerHTML='';
+  document.getElementById('stepNeighborhood').innerHTML='<div style="color:var(--ink3);font-family:var(--mono);font-size:11px;padding:8px 0">Run filter then click a cell</div>';
+  document.getElementById('stepKernel').innerHTML='<div style="color:var(--ink3);font-family:var(--mono);font-size:11px;padding:8px 0">Run filter then click a cell</div>';
+  document.getElementById('stepComputation').innerHTML='<div style="color:var(--ink3);font-family:var(--mono);font-size:11px;padding:8px 0">Each neighborhood pixel × kernel weight → sum = output</div>';
+  document.getElementById('stepResult').innerHTML='<div class="step-list"><div class="step-item"><div class="step-num2">?</div><span style="color:var(--ink3)">Run the filter then click an output cell.</span></div></div>';
+  document.querySelectorAll('#imageMatrix .mcell').forEach(c=>{c.classList.remove('highlight-input','highlight-active');});
+  state.outputMatrix=[];
+}
+
+// ═══════════════════════════════════════════════════
+//  PADDING EXPLAINER
+// ═══════════════════════════════════════════════════
+document.getElementById('padSelect').addEventListener('change', function(){
+  state.padMode=this.value;
+  const msgs={
+    reflect:'Border pixels are mirrored across the edge. f[−1] → f[1], etc.',
+    zero:'Out-of-bounds pixels are treated as 0 (black). May darken edges.',
+    replicate:'Border pixel value is repeated for all out-of-bounds positions.',
+    wrap:'Image wraps circularly — left edge connects to right edge.'
+  };
+  document.getElementById('padExplain').textContent=msgs[this.value]||'';
+});
+
+// ═══════════════════════════════════════════════════
+//  PRESET BUTTONS
+// ═══════════════════════════════════════════════════
+function buildPresets() {
+  const grid=document.getElementById('presetGrid');
+  grid.innerHTML='';
+  Object.keys(presets).forEach(key=>{
+    const btn=document.createElement('button');
+    btn.className='preset-btn'+(key==='Edge'?' active':'');
+    btn.dataset.preset=key;
+    btn.textContent=key;
+    btn.addEventListener('click',()=>applyPreset(key));
+    grid.appendChild(btn);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+function init() {
+  buildPresets();
+  // Load initial matrix
+  state.imageMatrix=presets['Edge'](state.matrixSize);
+  document.getElementById('matrixDimLabel').textContent=`${state.matrixSize}×${state.matrixSize}`;
+  renderImageMatrix();
+  renderHeatmap('heatmapOrig', state.imageMatrix, state.matrixSize);
+  renderStats('origStats', state.imageMatrix);
+  selectFilter('average');
+  setOperation('convolution');
+  document.getElementById('hdrOp').textContent='Operation: Convolution ⊛';
+}
+
+init();
+
+
+// v4 helpers: keep heatmaps crisp after window resizing in the new flowing layout
+window.addEventListener('resize', () => {
+  renderHeatmap('heatmapOrig', state.imageMatrix, state.matrixSize);
+  if (state.outputMatrix && state.outputMatrix.length) {
+    renderHeatmap('heatmapOut', state.outputMatrix.map(v=>Math.max(0,Math.min(255,Math.round(v)))), state.matrixSize);
+    const diff = state.imageMatrix.map((v,i)=>Math.abs((state.outputMatrix[i] ?? 0) - v));
+    renderHeatmap('heatmapDiff', diff, state.matrixSize, true);
+  }
+});
+</script>
+</body>
+</html>
