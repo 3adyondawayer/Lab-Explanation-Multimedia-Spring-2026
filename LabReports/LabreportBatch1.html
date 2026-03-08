@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ECE359 · Lab 2 Report</title>
+<title>ECE359 · Lab 1 to 3 Report</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════ ROOT / RESET */
@@ -594,7 +594,7 @@ strong{font-weight:600;color:var(--text-heading);}
 <div class="cover" id="top">
   <div class="cover-inner">
     <div class="cover-stamp" style="animation-delay:0s">ECE 359 · Spring 2026</div>
-    <h1>Lab 1& 2  Report<em>Fundamentals-Image Enhancement</em></h1>
+    <h1>Lab 1 to 3 Report</h1>
     <div class="cover-meta">
       <div class="cover-meta-item">
         <span class="cover-meta-label">Subject</span>
@@ -606,7 +606,7 @@ strong{font-weight:600;color:var(--text-heading);}
       </div>
       <div class="cover-meta-item">
         <span class="cover-meta-label">Topics</span>
-        <span class="cover-meta-value">Pointwise · Histograms · Spatial</span>
+        <span class="cover-meta-value">Fundamentals · Pointwise · Histograms</span>
       </div>
     </div>
   </div>
@@ -996,7 +996,7 @@ gammas = [0.4, 1.0, 2.5];
       <span class="task-arrow">▼</span>
     </div>
   </div>
-  <div class="task-body" id="body7">
+<div class="task-body" id="body7">
   <div class="task-body-inner">
     <p class="objective">Use MATLAB's <code>histeq()</code> with a target histogram to match the output image's intensity distribution to a specified shape. This is like equalization, but instead of targeting a flat distribution, you target an arbitrary one.</p>
 
@@ -1011,206 +1011,69 @@ gammas = [0.4, 1.0, 2.5];
         <span class="code-filename">task7_histmatch.m</span>
         <button class="copy-btn" onclick="copyCode(this)">Copy</button>
       </div>
-<pre><span class="cm">% ── Task 7: Histogram Matching ──────────</span>
+      <pre><span class="cm">% ── Task 7: Manual Histogram Matching ──────────</span>
 
-<span class="cm">% Load 'slr.jpg', convert to grayscale</span>
+<span class="cm">% Load 'image.jpg', convert to grayscale</span>
 <span class="cm">% TODO: Implement your code here</span>
 
-<span class="cm">% Load target histogram 'hist.mat'</span>
+<span class="cm">% Step 1 — Specify target distribution (e.g., exponential, Gaussian, or custom)</span>
+<span class="cm">% TODO: Define target_pdf as an array of probabilities for each intensity level (0-255)</span>
+
+<span class="cm">% Step 2 — Calculate target CDF from target_pdf using cumsum()</span>
 <span class="cm">% TODO: Implement your code here</span>
 
-<span class="cm">% Perform histogram matching using histeq(I, target_hist)</span>
+<span class="cm">% Step 3 — Calculate normalized histogram of input image (use imhist)</span>
 <span class="cm">% TODO: Implement your code here</span>
 
-<span class="cm">% Compare original, matched images & their histograms</span>
+<span class="cm">% Step 4 — Calculate input CDF using cumsum()</span>
+<span class="cm">% TODO: Implement your code here</span>
+
+<span class="cm">% Step 5 — Create mapping via histogram matching specification:</span>
+<span class="cm">% For each input intensity level i, find target intensity j where</span>
+<span class="cm">% target CDF(j) is closest to input CDF(i)</span>
+<span class="cm">% TODO: Implement your code here (nested loops or vectorized approach)</span>
+
+<span class="cm">% Step 6 — Apply mapping to the original image</span>
+<span class="cm">% TODO: Implement your code here</span>
+
+<span class="cm">% Display original/matched images and their histograms (2x2 subplots)</span>
+<span class="cm">% Include target distribution overlay on matched histogram for comparison</span>
 <span class="cm">% TODO: Implement your code here</span></pre>
     </div>
 
-    <div class="hints-area">
-      <button class="hint-btn" onclick="toggleHint(this,'h7a')"><span class="hint-icon">💡</span>histeq(I) vs histeq(I, hgram)</button>
+    <div class="interactive-box">
+      <div class="concept-box-title">🔬 Interactive Tool: Histogram Matching</div>
+      <p>Use this interactive tool to visualize how different target distributions affect the output image:</p>
+      <p style="text-align: center; margin-top: 8px;">
+        <a href="https://3adyondawayer.github.io/Multimedia-ECE359-S2026/tasks/W3_P2_histogram_processing.html" target="_blank" style="font-size: 1.1rem; font-weight: 600;">📊 Open Interactive Histogram Matching Tool</a>
+      </p>
+      <p style="font-size:0.85rem; color: #666; text-align: center;">Experiment with exponential, Gaussian, and uniform targets in real-time</p>
     </div>
-    <div class="hint-content" id="h7a"><code>histeq(I)</code> with one argument targets a <em>uniform</em> distribution — this is standard histogram equalization. <code>histeq(I, hgram)</code> with two arguments targets the distribution in <code>hgram</code> — this is histogram matching. The target <code>hgram</code> must be a 1×256 normalized vector summing to 1.</div>
 
-    <button class="complete-btn" onclick="markDone(7)">✓ Mark Complete</button>
-  </div>
+    <div class="checklist">
+      <p><strong>✅ Check your understanding:</strong></p>
+      <ul>
+        <li>How does the mapping differ from histogram equalization?</li>
+        <li>What happens if the target distribution has zero probability for some intensities?</li>
+        <li>Why is it important that both CDFs are monotonic?</li>
+        <li>What happens to intensities where input CDF values fall between target CDF samples?</li>
+      </ul>
+    </div>
   </div>
 </div>
-
-  <div class="section-break">
-    <div class="section-break-line"></div>
-    <div class="section-break-text">Part III — Spatial Filtering</div>
-    <div class="section-break-line"></div>
-  </div>
-
-<div class="task-card" id="task8">
-  <div class="task-header" onclick="toggleTask(8)">
-    <div class="task-num-wrap"><span class="num">8</span><span class="check">✓</span></div>
-    <div class="task-title-group">
-      <span class="task-category">Spatial Filtering</span>
-      <div class="task-title">Design &amp; Apply an Averaging Filter</div>
-    </div>
-    <div class="task-meta">
-      <span class="diff-badge diff-easy">Easy</span>
-      <span class="done-stamp">Done</span>
-      <span class="task-arrow">▼</span>
-    </div>
-  </div>
-  <div class="task-body" id="body8">
-  <div class="task-body-inner">
-    <p class="objective">Manually construct a 5×5 box filter (without <code>fspecial</code>) and apply it to an image. Then deliberately omit the normalization factor to observe what happens — this is a classic mistake.</p>
-
-    <div class="concept-box">
-      <div class="concept-box-title">Box Filter — What it does</div>
-      <p style="font-size:0.88rem;">Each output pixel becomes the average of the 5×5 neighborhood. This blurs the image. The dividing factor 1/25 keeps the brightness level unchanged.</p>
-      <span class="formula-line">h = (1/25) × ones(5,5)  →  sum(h(:)) = 1.0</span>
     </div>
 
-    <div class="code-wrap">
-      <div class="code-topbar">
-        <div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div>
-        <span class="code-filename">task8_avgfilter.m</span>
-        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-      </div>
-<pre><span class="cm">% ── Task 8: Averaging Filter ──────────</span>
-
-<span class="cm">% Load 'board.jpg', convert to grayscale</span>
-<span class="cm">% TODO: Implement your code here</span>
-
-<span class="cm">% Create Filter A: 5x5 normalized box filter, and apply it</span>
-<span class="cm">% TODO: Implement your code here</span>
-
-<span class="cm">% Create Filter B: 5x5 WITHOUT normalization</span>
-<span class="cm">% Apply to a double() version of the image to see raw output values</span>
-<span class="cm">% TODO: Implement your code here</span>
-
-<span class="cm">% Display original and both filtered images</span>
-<span class="cm">% TODO: Implement your code here</span></pre>
-    </div>
-
-    <div class="hints-area">
-      <button class="hint-btn" onclick="toggleHint(this,'h8a')"><span class="hint-icon">💡</span>Why imfilter(..., h5) works with uint8 but not unnormalized?</button>
-    </div>
-    <div class="hint-content" id="h8a">When you call <code>imfilter</code> with a uint8 image, MATLAB automatically clips output values to [0,255]. So the normalized version (output ≈ original range) is fine. But for the unnormalized case, we convert to <code>double</code> first to <em>see</em> the actual large values before clipping occurs.</div>
-
-    <button class="complete-btn" onclick="markDone(8)">✓ Mark Complete</button>
-  </div>
-  </div>
 </div>
 
-<div class="task-card" id="task9">
-  <div class="task-header" onclick="toggleTask(9)">
-    <div class="task-num-wrap"><span class="num">9</span><span class="check">✓</span></div>
-    <div class="task-title-group">
-      <span class="task-category">Spatial Filtering</span>
-      <div class="task-title">Compare Filter Sizes — Blur vs. Detail</div>
-    </div>
-    <div class="task-meta">
-      <span class="diff-badge diff-easy">Easy</span>
-      <span class="done-stamp">Done</span>
-      <span class="task-arrow">▼</span>
-    </div>
-  </div>
-  <div class="task-body" id="body9">
-  <div class="task-body-inner">
-    <p class="objective">Apply three different filter sizes (3×3, 7×7, and 15×15) and visually compare the blurring effect. Verify by computing the standard deviation of each output — a more blurred image has lower standard deviation.</p>
 
-    <div class="concept-box">
-      <div class="concept-box-title">Size Determines Blur Radius</div>
-      <p style="font-size:0.88rem;">A 3×3 filter averages over 9 pixels. A 15×15 filter averages over 225 pixels. Larger filters erase finer detail, smooth noise more aggressively, and make edges harder to detect.</p>
-    </div>
-
-    <div class="code-wrap">
-      <div class="code-topbar">
-        <div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div>
-        <span class="code-filename">task9_filtersize.m</span>
-        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-      </div>
-<pre><span class="cm">% ── Task 9: Compare Filter Sizes ──────────</span>
-
-<span class="cm">% Load 'board.jpg', convert to grayscale</span>
-<span class="cm">% TODO: Implement your code here</span>
-
-<span class="cm">% Loop through sizes 3, 7, and 15</span>
-<span class="cm">% Apply normalized box filters and calculate std() for each</span>
-<span class="cm">% TODO: Implement your code here</span>
-
-<span class="cm">% Plot original and the three filtered results</span>
-<span class="cm">% TODO: Implement your code here</span></pre>
-    </div>
-
-    <div class="hints-area">
-      <button class="hint-btn" onclick="toggleHint(this,'h9a')"><span class="hint-icon">💡</span>Why does std decrease with larger filters?</button>
-    </div>
-    <div class="hint-content" id="h9a">Standard deviation measures how spread out the pixel values are. A sharp image has high contrast. After heavy averaging, neighboring pixels all look similar (the filter "flattens" local differences), so the overall spread of values decreases. Lower std = more uniform = more blurred.</div>
-
-    <button class="complete-btn" onclick="markDone(9)">✓ Mark Complete</button>
-  </div>
+</div>
+<div id="completionSection" style="display:none;margin-top:3rem;text-align:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:3rem 2rem;position:relative;overflow:hidden;box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:0.75rem;font-weight:600;letter-spacing:0.2em;color:var(--accent);text-transform:uppercase;margin-bottom:1rem;">Lab Complete</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:2.5rem;color:var(--text-heading);line-height:1.2;margin-bottom:0.5rem;">10 / 10<br><span style="font-size:1rem;color:var(--success);font-weight:600;">Tasks Completed</span></div>
+    <p style="color:var(--text-muted);font-size:0.95rem;max-width:500px;margin:1.5rem auto 0;font-style:italic;">You have covered pointwise operations, histogram analysis, histogram equalization &amp; matching, and spatial domain filtering. All core tools of image enhancement.</p>
   </div>
 </div>
-
-<div class="task-card" id="task10">
-  <div class="task-header" onclick="toggleTask(10)">
-    <div class="task-num-wrap"><span class="num">10</span><span class="check">✓</span></div>
-    <div class="task-title-group">
-      <span class="task-category">Full Pipeline</span>
-      <div class="task-title">Build a Complete Image Enhancement Pipeline</div>
-    </div>
-    <div class="task-meta">
-      <span class="diff-badge diff-med">Medium</span>
-      <span class="done-stamp">Done</span>
-      <span class="task-arrow">▼</span>
-    </div>
-  </div>
-  <div class="task-body" id="body10">
-  <div class="task-body-inner">
-    <p class="objective">Combine everything you've learned into one pipeline: load → convert → denoise with spatial filter → equalize histogram → apply power law refinement → display and save. This mirrors a real-world workflow.</p>
-
-    <div class="concept-box">
-      <div class="concept-box-title">Pipeline Order Matters</div>
-      <p style="font-size:0.88rem;">Filtering before equalization removes noise so the histogram isn't skewed by outliers. Equalization before the power law ensures contrast is spread first, then gently tuned.</p>
-    </div>
-
-    <div class="code-wrap">
-      <div class="code-topbar">
-        <div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div>
-        <span class="code-filename">task10_pipeline.m</span>
-        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-      </div>
-<pre><span class="cm">% ── Task 10: Complete Image Enhancement Pipeline ──────────</span>
-
-clear; clc; close all;
-
-<span class="cm">% STAGE 0: Load 'image.jpg' & Convert to grayscale</span>
-<span class="cm">% TODO: Implement your code here</span>
-
-<span class="cm">% STAGE 1: Denoise with 3x3 averaging filter (use 'replicate' option)</span>
-<span class="cm">% TODO: Implement your code here</span>
-
-<span class="cm">% STAGE 2: Histogram equalization</span>
-<span class="cm">% TODO: Implement your code here</span>
-
-<span class="cm">% STAGE 3: Power law refinement (gamma = 0.85)</span>
-<span class="cm">% TODO: Implement your code here</span>
-
-<span class="cm">% Display full pipeline stages and their histograms side-by-side</span>
-<span class="cm">% TODO: Implement your code here</span>
-
-<span class="cm">% Save final result to 'enhanced_output.png'</span>
-<span class="cm">% TODO: Implement your code here</span></pre>
-    </div>
-
-    <div class="hints-area">
-      <button class="hint-btn" onclick="toggleHint(this,'h10a')"><span class="hint-icon">💡</span>Why 'replicate' in imfilter?</button>
-      <button class="hint-btn" onclick="toggleHint(this,'h10b')"><span class="hint-icon">💡</span>What does sgtitle do?</button>
-    </div>
-    <div class="hint-content" id="h10a">By default, <code>imfilter</code> pads the image borders with zeros (black). When you filter near the edge, the kernel partially overlaps a region of all zeros, dragging the average down — this creates dark borders in the output. <code>'replicate'</code> pads by repeating the edge pixel value instead, which is much more natural and avoids the dark border artifact.</div>
-    <div class="hint-content" id="h10b"><code>sgtitle()</code> adds a "super-title" to the entire figure (above all subplots), while each individual <code>title()</code> call labels only its own subplot. Available since MATLAB R2018b.</div>
-
-    <button class="complete-btn" onclick="markDone(10)">✓ Mark Complete</button>
-  </div>
-  </div>
-</div>
-
 <div id="completionSection" style="display:none;margin-top:3rem;text-align:center;">
   <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:3rem 2rem;position:relative;overflow:hidden;box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);">
     <div style="font-family:'IBM Plex Mono',monospace;font-size:0.75rem;font-weight:600;letter-spacing:0.2em;color:var(--accent);text-transform:uppercase;margin-bottom:1rem;">Lab Complete</div>
@@ -1220,13 +1083,13 @@ clear; clc; close all;
 </div>
 
 </div><footer>
-  ECE359 · Ain Shams University · Spring 2026 &nbsp;·&nbsp; Lab 2 Report — Image Enhancement<br><br>
+  ECE359 · Ain Shams University · Spring 2026 &nbsp;·&nbsp; Lab 1 to 3 Report — Image Enhancement<br><br>
   Teaching Assistant: Adnan Zahran
 </footer>
 
 <script>
 /* ═══════════════════════════ STATE */
-const totalTasks = 10;
+const totalTasks = 7;
 const done = new Array(totalTasks+1).fill(false);
 
 const taskMeta = [
@@ -1238,9 +1101,6 @@ const taskMeta = [
   {label:"Histogram"},
   {label:"Equalize"},
   {label:"Matching"},
-  {label:"Avg Filter"},
-  {label:"Filter Size"},
-  {label:"Pipeline"}
 ];
 
 /* ═══════════════════════════ INIT */
