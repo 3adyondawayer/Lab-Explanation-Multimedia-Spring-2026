@@ -336,7 +336,7 @@
         <div class="card search-section">
             <div class="input-group">
                 <label><i class="fas fa-id-card"></i> Student ID</label>
-                <input type="text" id="studentIdInput" placeholder="e.g., 22P0234, 2201397" autocomplete="off">
+                <input type="text" id="studentIdInput" placeholder="e.g., 22Pxxxx" autocomplete="off">
             </div>
             <button class="btn btn-primary" id="lookupBtn">
                 <i class="fas fa-search"></i> View Grades
@@ -565,7 +565,7 @@
             const inputElem = document.getElementById("studentIdInput");
             const input = inputElem.value.trim();
             if (!input) {
-                alert("Please enter your Student ID (e.g., 22P0234)");
+                alert("Please enter your Student ID (e.g., 22Pxxxx)");
                 return;
             }
 
@@ -587,7 +587,7 @@
                 <div class="card" style="padding:3.5rem; text-align:center; color:#64748b;">
                     <i class="fas fa-graduation-cap" style="font-size:4rem; opacity:0.2; margin-bottom:1rem;"></i>
                     <p style="margin-top:0.5rem; font-size:1.1rem;">Enter your Student ID above to view your updated grades and corrected midterm paper.</p>
-                    <div style="margin-top:1rem; font-size:0.85rem;">✅ Supported IDs: 22Pxxxx format or numeric like 2201397</div>
+                    <div style="margin-top:1rem; font-size:0.85rem;">✅ Supported IDs: 22Pxxxx format </div>
                 </div>
             `;
             // Also close modal if open
