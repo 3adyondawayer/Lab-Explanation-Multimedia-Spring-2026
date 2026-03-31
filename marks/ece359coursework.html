@@ -36,7 +36,6 @@
             font-weight: 700;
             background: linear-gradient(135deg, #1e2a3a, #2c3e50);
             -webkit-background-clip: text;
-            background-clip: text;
             color: transparent;
             letter-spacing: -0.5px;
         }
@@ -99,12 +98,12 @@
             cursor: pointer;
             transition: all 0.2s;
             font-size: 1rem;
-            border: none;
         }
 
         .btn-primary {
             background: #1e293b;
             color: white;
+            border: none;
         }
 
         .btn-primary:hover {
@@ -115,6 +114,7 @@
         .btn-secondary {
             background: #64748b;
             color: white;
+            border: none;
         }
 
         .btn-secondary:hover {
@@ -206,12 +206,6 @@
             box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
         }
 
-        .pdf-button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
         /* PDF Modal */
         .modal {
             display: none;
@@ -220,7 +214,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.92);
+            background: rgba(0, 0, 0, 0.9);
             z-index: 2000;
             align-items: center;
             justify-content: center;
@@ -234,9 +228,7 @@
             max-width: 1100px;
             max-height: 95vh;
             overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-            display: flex;
-            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
         }
 
         .modal-header {
@@ -246,7 +238,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-shrink: 0;
         }
 
         .modal-header h3 {
@@ -261,24 +252,12 @@
             font-size: 2rem;
             cursor: pointer;
             line-height: 1;
-            transition: opacity 0.2s;
-        }
-
-        .modal-close:hover {
-            opacity: 0.7;
-        }
-
-        .modal-body {
-            flex: 1;
-            min-height: 0;
-            background: #f1f5f9;
         }
 
         .modal-body iframe {
             width: 100%;
-            height: 100%;
+            height: 82vh;
             border: none;
-            display: block;
         }
 
         .absent-tag {
@@ -288,7 +267,6 @@
             border-radius: 9999px;
             font-weight: 600;
             display: inline-block;
-            font-size: 1.2rem;
         }
 
         .footer-note {
@@ -298,16 +276,6 @@
             margin-top: 3rem;
         }
 
-        .warning-banner {
-            background: #fef9e3;
-            border-left: 5px solid #f59e0b;
-            padding: 0.8rem 1.2rem;
-            border-radius: 16px;
-            margin-top: 1rem;
-            font-size: 0.85rem;
-            color: #92400e;
-        }
-
         @media (max-width: 640px) {
             .search-section {
                 flex-direction: column;
@@ -315,12 +283,6 @@
             }
             .grade-value {
                 font-size: 2.2rem;
-            }
-            .student-name {
-                font-size: 1.4rem;
-            }
-            .modal-header h3 {
-                font-size: 1rem;
             }
         }
     </style>
@@ -346,12 +308,12 @@
             </button>
         </div>
 
-        <!-- Results Container -->
+        <!-- Results -->
         <div id="resultContainer" class="result-area"></div>
 
         <div class="footer-note">
-            <i class="fas fa-file-pdf"></i> Corrected midterm papers are available in the "marks" folder.<br>
-            Click the green button to view your corrected paper directly (PDF viewer integrated).
+            Corrected midterm papers are available in the "marks" folder.<br>
+            Click the button to view your corrected paper directly.
         </div>
     </div>
 
@@ -360,18 +322,16 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modalTitle">Corrected Midterm Paper</h3>
-                <button class="modal-close" id="closeModalBtn">×</button>
+                <button class="modal-close" onclick="closePdfModal()">×</button>
             </div>
             <div class="modal-body">
-                <iframe id="pdfFrame" src="" title="PDF Viewer"></iframe>
+                <iframe id="pdfFrame" src=""></iframe>
             </div>
         </div>
     </div>
 
     <script>
-        // ==================== STUDENT DATA (Validated & Clean) ====================
-        // Fixed data: corrected the broken student entry for Omar Mohamed Kamal (added valid placeholder ID)
-        // Also ensured all entries have proper fields.
+        // ==================== STUDENT DATA ====================
         const students = [
             { name: "Abdelmajed Hatem",          id: "22P0234", email: "majedhatem201004@gmail.com", quiz1: 9.75,  midterm: 18.75 },
             { name: "Malak Sameh Abdelaziz Mansour", id: "2201397", email: "malaksameh352@gmail.com", quiz1: 8.5,   midterm: 18.5 },
@@ -383,11 +343,10 @@
             { name: "Ezzeldin Ahmed Ezzeldin Hafez", id: "22P0050", email: "ezzeldin14735@gmail.com", quiz1: 7, midterm: 17.5 },
             { name: "Ziad Ahmed Mohamed Nader",  id: "22P0059", email: "zyaddabdellatif@gmail.com", quiz1: 8.5, midterm: 17.5 },
             { name: "Ahmed wael Adel Ebrahim",   id: "22P0309", email: "awael5778@gmail.com", quiz1: 3.75, midterm: 11.75 },
-            // Fixed: Omar Mohamed Kamal - ID was null, assigned a valid distinct ID for demo (22P9999) and set email placeholder
-            { name: "Omar Mohamed Kamal",        id: "22P9999", email: "omar.kamal@example.com", quiz1: null, midterm: 9.5 }
+            { name: "Omar Mohamed Kamal",        id: null,      email: "", quiz1: null, midterm: 9.5 }
         ];
 
-        // PDF Mapping - Files inside "marks" folder (case-sensitive, ensure filenames match)
+        // PDF Mapping - Files are inside "marks" folder
         const pdfMap = {
             "22P0234": "marks/mid22P0234.pdf",
             "2201397": "marks/mid2201397.pdf",
@@ -398,180 +357,130 @@
             "22P0104": "marks/mid22P0104.pdf",
             "22P0050": "marks/mid22P0050.pdf",
             "22P0059": "marks/mid22P0059.pdf",
-            "22P0309": "marks/mid22P0309.pdf",
-            "22P9999": "marks/mid22P9999.pdf"    // Added for completeness (if file exists)
+            "22P0309": "marks/mid22P0309.pdf"
         };
 
-        // Helper: Normalize ID for robust matching (uppercase, remove spaces, keep alphanumeric)
+        // Normalize ID for lookup
         function normalizeId(id) {
             if (!id) return "";
-            return id.toString().trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+            return id.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
         }
 
-        // Build Map from normalized ID -> student data
         const studentMap = new Map();
         students.forEach(student => {
             if (student.id) {
                 const normId = normalizeId(student.id);
-                // Store a copy to avoid mutation, keep original ID for display
                 studentMap.set(normId, { ...student, originalId: student.id });
             }
         });
 
-        // Get PDF file path for a given student ID (normalized lookup)
-        function getPdfPath(studentId) {
+        function getPdfFilename(studentId) {
             const norm = normalizeId(studentId);
             return pdfMap[norm] || null;
         }
 
-        // Render student grades card with proper escaping and PDF button logic
+        // Render student grades
         function renderStudentGrades(student) {
             const container = document.getElementById("resultContainer");
-            const pdfPath = getPdfPath(student.id);
+            const pdfPath = getPdfFilename(student.id);
             const hasPdf = !!pdfPath;
-            
-            // Format quiz1 display
-            let quizDisplay = '';
-            if (student.quiz1 !== null && student.quiz1 !== undefined && !isNaN(student.quiz1)) {
-                quizDisplay = `${student.quiz1.toFixed(2)} <span style="font-size:1rem; font-weight:500; color:#6b7280;">/10</span>`;
-            } else {
-                quizDisplay = `<span class="absent-tag" style="background:#f1f3f4; color:#475569;">Not Available</span>`;
-            }
 
-            // Format midterm display (handles null, zero, etc)
-            let midDisplay = '';
-            if (student.midterm !== null && student.midterm !== undefined && !isNaN(student.midterm)) {
-                if (student.midterm === 0 && student.quiz1 === 0 && student.name === "Mohab Magdy") {
-                    // Special absent/zero case but show numeric
-                    midDisplay = `${student.midterm.toFixed(2)} <span style="font-size:1rem; font-weight:500; color:#6b7280;">/20</span> <span class="absent-tag" style="margin-left:8px;">Absent</span>`;
-                } else {
-                    midDisplay = `${student.midterm.toFixed(2)} <span style="font-size:1rem; font-weight:500; color:#6b7280;">/20</span>`;
-                }
-            } else {
-                midDisplay = `<span class="absent-tag">Not Recorded</span>`;
-            }
+            const quizDisplay = (student.quiz1 !== null && student.quiz1 !== undefined) 
+                ? `${student.quiz1.toFixed(2)} <span style="font-size:1rem; color:#6b7280;">/10</span>` 
+                : "—";
 
-            // Email display: only show if exists
-            const emailHtml = student.email ? `<div style="margin-top:8px; color:#64748b; font-size:0.95rem;"><i class="fas fa-envelope"></i> ${escapeHtml(student.email)}</div>` : '';
+            const midDisplay = (student.midterm !== null && student.midterm !== undefined) 
+                ? `${student.midterm.toFixed(2)} <span style="font-size:1rem; color:#6b7280;">/20</span>` 
+                : `<span class="absent-tag">Absent</span>`;
 
-            // Safely escape student name for modal call
-            const safeStudentName = escapeHtml(student.name);
-            
+            // FIXED: Replaced broken \( { } syntax with valid JavaScript template literal syntax ${ }
             const html = `
                 <div class="card grade-card">
                     <div class="student-identity">
                         <div>
-                            <div class="student-name">${escapeHtml(student.name)}</div>
-                            ${emailHtml}
+                            <div class="student-name">${student.name}</div>
+                            ${student.email ? `<div style="margin-top:8px; color:#64748b; font-size:0.95rem;">${student.email}</div>` : ''}
                         </div>
                         <div class="student-id-badge">
-                            <i class="fas fa-id-card"></i> ${escapeHtml(student.originalId || 'N/A')}
+                            <i class="fas fa-id-card"></i> ${student.originalId || 'N/A'}
                         </div>
                     </div>
 
                     <div class="grades-grid">
                         <div class="grade-item">
-                            <div class="grade-label"><i class="fas fa-pen-alt"></i> Quiz 1</div>
+                            <div class="grade-label">Quiz 1</div>
                             <div class="grade-value">${quizDisplay}</div>
                         </div>
                         <div class="grade-item">
-                            <div class="grade-label"><i class="fas fa-file-alt"></i> Midterm Exam</div>
+                            <div class="grade-label">Midterm Exam</div>
                             <div class="grade-value">${midDisplay}</div>
                         </div>
                     </div>
+
                     ${hasPdf ? `
-                    <button onclick='viewPdf("${pdfPath}", "${safeStudentName}")' class="pdf-button" id="pdfBtnDynamic">
+                    <button onclick="viewPdf('${pdfPath}', '${student.name.replace(/'/g, "\\'")}')" class="pdf-button">
                         <i class="fas fa-file-pdf"></i> View Corrected Midterm Paper
                     </button>` : `
                     <div style="margin-top:1.5rem; padding:1.2rem; background:#fefce8; border-radius:16px; text-align:center; color:#854d0e;">
-                        <i class="fas fa-clock"></i> Corrected paper will be available soon
+                        <i class="fas fa-info-circle"></i> Corrected paper will be available soon
                     </div>`}
-                    <div class="warning-banner">
-                        <i class="fas fa-info-circle"></i> Midterm grades include corrections. For any discrepancy, contact your instructor.
-                    </div>
                 </div>
             `;
+
             container.innerHTML = html;
         }
 
-        // Simple escape function to prevent XSS
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-                return c;
-            });
-        }
-
-        // Show not found message with better UX
         function showNotFound(idEntered) {
-            const container = document.getElementById("resultContainer");
-            container.innerHTML = `
-                <div class="card" style="padding:3rem; text-align:center; background:#fef2f2; border-left:6px solid #dc2626;">
-                    <i class="fas fa-user-slash" style="font-size:3rem; opacity:0.6; color:#b91c1c;"></i>
-                    <h3 style="margin:1rem 0 0.5rem; color:#991b1b;">Student Not Found</h3>
-                    <p>No record found for ID: <strong>${escapeHtml(idEntered)}</strong><br>Please double-check your Student ID and try again.</p>
-                    <div style="margin-top:1rem; font-size:0.9rem; background:#fff; padding:0.8rem; border-radius:20px; display:inline-block;">
-                        <i class="fas fa-lightbulb"></i> Example IDs: 22P0234, 2201397, 22P0098
-                    </div>
+            document.getElementById("resultContainer").innerHTML = `
+                <div class="card" style="padding:3rem; text-align:center; background:#fef2f2; color:#991b1b;">
+                    <i class="fas fa-user-slash" style="font-size:3rem; opacity:0.7;"></i>
+                    <h3 style="margin:1rem 0 0.5rem;">Student Not Found</h3>
+                    <p>No record found for ID: <strong>${idEntered}</strong><br>Please check your Student ID and try again.</p>
+                </div>
+            `;
+        }
+        
+        function showEmptyInputMessage() {
+            document.getElementById("resultContainer").innerHTML = `
+                <div class="card" style="padding:2.5rem; text-align:center; background:#fffbeb; color:#b45309; border: 1px solid #fde68a;">
+                    <i class="fas fa-exclamation-triangle" style="font-size:2.5rem; opacity:0.8;"></i>
+                    <h3 style="margin:1rem 0 0.5rem;">Missing ID</h3>
+                    <p>Please enter your Student ID into the search field to view your grades.</p>
                 </div>
             `;
         }
 
-        // PDF Modal Functions with error handling for missing files
+        // PDF Modal Functions
         function viewPdf(pdfPath, studentName) {
             const modal = document.getElementById("pdfModal");
             const iframe = document.getElementById("pdfFrame");
-            const modalTitle = document.getElementById("modalTitle");
-            
-            if (!pdfPath) {
-                alert("PDF file path is not available for this student.");
-                return;
-            }
-            
-            // Set title and attempt to load PDF
-            modalTitle.textContent = `${studentName} - Corrected Midterm Paper`;
+            const title = document.getElementById("modalTitle");
+
+            title.textContent = `${studentName} - Corrected Midterm`;
             iframe.src = pdfPath;
-            
-            // Handle iframe load error (in case PDF missing)
-            iframe.onerror = function() {
-                alert("Unable to load PDF. The file might be missing from the server. Please contact support.");
-                closePdfModal();
-            };
-            
-            // Optional: set timeout to detect loading issues (extra safety)
-            iframe.onload = function() {
-                // successful load, nothing special
-            };
-            
+
             modal.style.display = "flex";
-            document.body.style.overflow = "hidden"; // prevent background scroll
         }
 
         function closePdfModal() {
             const modal = document.getElementById("pdfModal");
             const iframe = document.getElementById("pdfFrame");
             modal.style.display = "none";
-            iframe.src = ""; // stop loading
-            document.body.style.overflow = "";
+            iframe.src = "";
         }
 
-        // Lookup main function with case-insensitive matching
+        // Lookup Function
         function performLookup() {
-            const inputElem = document.getElementById("studentIdInput");
-            const input = inputElem.value.trim();
+            const input = document.getElementById("studentIdInput").value.trim();
             if (!input) {
-                alert("Please enter your Student ID (e.g., 22Pxxxx)");
+                // FIXED: Replace browser alert() with an inline message box inside the UI
+                showEmptyInputMessage();
                 return;
             }
 
-            const normalizedInput = normalizeId(input);
-            const student = studentMap.get(normalizedInput);
-            
+            const normalized = normalizeId(input);
+            const student = studentMap.get(normalized);
+
             if (student) {
                 renderStudentGrades(student);
             } else {
@@ -580,68 +489,31 @@
         }
 
         function resetLookup() {
-            const inputField = document.getElementById("studentIdInput");
-            inputField.value = "";
-            const container = document.getElementById("resultContainer");
-            container.innerHTML = `
+            document.getElementById("studentIdInput").value = "";
+            document.getElementById("resultContainer").innerHTML = `
                 <div class="card" style="padding:3.5rem; text-align:center; color:#64748b;">
-                    <i class="fas fa-graduation-cap" style="font-size:4rem; opacity:0.2; margin-bottom:1rem;"></i>
-                    <p style="margin-top:0.5rem; font-size:1.1rem;">Enter your Student ID above to view your updated grades and corrected midterm paper.</p>
-                    <div style="margin-top:1rem; font-size:0.85rem;">✅ Supported IDs: 22Pxxxx format </div>
+                    <i class="fas fa-graduation-cap" style="font-size:4rem; opacity:0.15;"></i>
+                    <p style="margin-top:1.5rem; font-size:1.1rem;">Enter your Student ID above to view your updated grades and corrected midterm paper.</p>
                 </div>
             `;
-            // Also close modal if open
-            closePdfModal();
         }
 
-        // Keyboard shortcuts & event listeners
+        // Event Listeners
         document.addEventListener("DOMContentLoaded", () => {
-            const lookupBtn = document.getElementById("lookupBtn");
-            const resetBtn = document.getElementById("resetBtn");
-            const studentIdInput = document.getElementById("studentIdInput");
-            const closeModalBtn = document.getElementById("closeModalBtn");
-            const modalOverlay = document.getElementById("pdfModal");
-            
-            if (lookupBtn) lookupBtn.addEventListener("click", performLookup);
-            if (resetBtn) resetBtn.addEventListener("click", resetLookup);
-            
-            if (studentIdInput) {
-                studentIdInput.addEventListener("keypress", (e) => {
-                    if (e.key === "Enter") {
-                        e.preventDefault();
-                        performLookup();
-                    }
-                });
-            }
-            
-            // Close modal when clicking on close button or backdrop
-            if (closeModalBtn) {
-                closeModalBtn.addEventListener("click", closePdfModal);
-            }
-            
-            // Close modal when clicking outside of modal content
-            if (modalOverlay) {
-                modalOverlay.addEventListener("click", (e) => {
-                    if (e.target === modalOverlay) {
-                        closePdfModal();
-                    }
-                });
-            }
-            
-            // Escape key closes modal
-            document.addEventListener("keydown", (e) => {
-                if (e.key === "Escape" && modalOverlay && modalOverlay.style.display === "flex") {
-                    closePdfModal();
+            document.getElementById("lookupBtn").addEventListener("click", performLookup);
+            document.getElementById("resetBtn").addEventListener("click", resetLookup);
+
+            const inputField = document.getElementById("studentIdInput");
+            inputField.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") {
+                    performLookup();
                 }
             });
-            
-            // Initialize with placeholder message
+
+            // Initial state
             resetLookup();
         });
-        
-        // Make viewPdf and closePdfModal globally accessible for dynamic buttons
-        window.viewPdf = viewPdf;
-        window.closePdfModal = closePdfModal;
     </script>
 </body>
 </html>
+
