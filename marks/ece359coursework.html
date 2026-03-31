@@ -3,469 +3,504 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Student Grade Portal | Grade Compass</title>
+    <title>Grade Compass - Student Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             background: #f5f7fc;
             font-family: 'Inter', sans-serif;
             color: #1a2634;
-            padding: 2rem 1.5rem;
-            line-height: 1.4;
+            padding: 2rem 1rem;
+            line-height: 1.5;
         }
-        .container { max-width: 1280px; margin: 0 auto; }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
 
         .portal-header {
             text-align: center;
             margin-bottom: 2.5rem;
         }
+
         .portal-header h1 {
-            font-size: 2.3rem;
+            font-size: 2.4rem;
             font-weight: 700;
             background: linear-gradient(135deg, #1e2a3a, #2c3e50);
             -webkit-background-clip: text;
             color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .portal-header p {
+            color: #5b6e8c;
+            margin-top: 0.5rem;
+            font-size: 1.1rem;
         }
 
         .card {
             background: #ffffff;
-            border-radius: 32px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05);
+            border-radius: 28px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
             border: 1px solid #eef2f8;
             overflow: hidden;
         }
 
         .search-section {
-            padding: 1.8rem 2rem;
+            padding: 2rem;
             display: flex;
             flex-wrap: wrap;
-            gap: 1.2rem;
+            gap: 1rem;
             align-items: flex-end;
         }
+
         .input-group {
             flex: 1;
-            min-width: 240px;
+            min-width: 260px;
         }
+
         .input-group label {
             font-size: 0.85rem;
             font-weight: 600;
             color: #4a627a;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.6rem;
             display: block;
         }
+
         .input-group input {
             width: 100%;
-            padding: 1rem;
-            font-size: 1.05rem;
-            border: 1.5px solid #e2e8f0;
+            padding: 1rem 1.2rem;
+            font-size: 1.1rem;
+            border: 2px solid #e2e8f0;
             border-radius: 20px;
             font-family: monospace;
+            transition: all 0.2s;
         }
+
         .input-group input:focus {
             outline: none;
             border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
         }
 
-        .btn-primary, .btn-secondary {
-            padding: 0.95rem 2rem;
+        .btn {
+            padding: 1rem 2rem;
             border-radius: 40px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
+            font-size: 1rem;
         }
+
         .btn-primary {
             background: #1e293b;
             color: white;
             border: none;
         }
-        .btn-primary:hover { background: #0f172a; transform: translateY(-1px); }
+
+        .btn-primary:hover {
+            background: #0f172a;
+            transform: translateY(-2px);
+        }
+
         .btn-secondary {
-            background: #3b82f6;
+            background: #64748b;
             color: white;
             border: none;
         }
-        .btn-secondary:hover { background: #2563eb; }
 
-        .result-area { margin-top: 1rem; }
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .result-area {
+            margin-top: 1rem;
+        }
 
         .grade-card {
-            padding: 2rem;
+            padding: 2.2rem;
         }
+
         .student-identity {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            border-bottom: 2px solid #f0f3f9;
-            padding-bottom: 1.5rem;
-            margin-bottom: 1.8rem;
             flex-wrap: wrap;
             gap: 1rem;
+            border-bottom: 2px solid #f0f3f9;
+            padding-bottom: 1.8rem;
+            margin-bottom: 2rem;
         }
-        .student-name { font-size: 1.75rem; font-weight: 700; color: #0f172a; }
+
+        .student-name {
+            font-size: 1.85rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
         .student-id-badge {
             background: #eef2ff;
-            padding: 0.4rem 1.2rem;
-            border-radius: 100px;
+            padding: 0.5rem 1.3rem;
+            border-radius: 9999px;
             font-weight: 600;
             color: #1e40af;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
         }
 
         .grades-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.6rem;
             margin-bottom: 2rem;
         }
+
         .grade-item {
-            background: #f9fbfe;
-            border-radius: 24px;
-            padding: 1.4rem;
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 1.6rem 1.4rem;
             text-align: center;
-            border: 1px solid #edf2f7;
+            border: 1px solid #e2e8f0;
         }
-        .grade-label { font-size: 0.85rem; font-weight: 600; color: #5b6e8c; margin-bottom: 0.5rem; }
-        .grade-value { font-size: 2.6rem; font-weight: 800; color: #1f2b38; }
+
+        .grade-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 0.6rem;
+        }
+
+        .grade-value {
+            font-size: 2.7rem;
+            font-weight: 800;
+            color: #1f2b38;
+            line-height: 1;
+        }
 
         .pdf-button {
             width: 100%;
-            padding: 1rem;
-            background: #10b981;
+            padding: 1.1rem;
+            background: linear-gradient(135deg, #10b981, #059669);
             color: white;
             border: none;
             border-radius: 20px;
             font-weight: 600;
-            margin-top: 1rem;
+            font-size: 1.05rem;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
+            margin-top: 1.2rem;
         }
-        .pdf-button:hover { background: #059669; }
 
-        /* Modal for PDF */
+        .pdf-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        /* PDF Modal */
         .modal {
             display: none;
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
-            z-index: 1000;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
             align-items: center;
             justify-content: center;
+            padding: 1rem;
         }
+
         .modal-content {
             background: white;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 1000px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 1100px;
             max-height: 95vh;
             overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
         }
+
         .modal-header {
-            padding: 1rem 1.5rem;
+            padding: 1.2rem 2rem;
             background: #1e293b;
             color: white;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.3rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+
         .modal-body iframe {
             width: 100%;
-            height: 80vh;
+            height: 82vh;
             border: none;
         }
 
         .absent-tag {
             background: #fee2e2;
             color: #b91c1c;
-            padding: 0.4rem 1rem;
-            border-radius: 50px;
+            padding: 0.5rem 1.2rem;
+            border-radius: 9999px;
             font-weight: 600;
+            display: inline-block;
         }
 
         .footer-note {
             text-align: center;
-            font-size: 0.8rem;
-            color: #8196af;
+            font-size: 0.85rem;
+            color: #64748b;
             margin-top: 3rem;
+        }
+
+        @media (max-width: 640px) {
+            .search-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .grade-value {
+                font-size: 2.2rem;
+            }
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="portal-header">
-        <h1>Grade Compass</h1>
-        <p>Secure Student Portal • Updated Midterm Results (March 2026)</p>
-    </div>
-
-    <div class="card search-section">
-        <div class="input-group">
-            <label>Student ID</label>
-            <input type="text" id="studentIdInput" placeholder="e.g., 22P0234 or 2201397" autocomplete="off">
+    <div class="container">
+        <div class="portal-header">
+            <h1><i class="fas fa-graduation-cap"></i> Grade Compass</h1>
+            <p>Updated Midterm Results - March 2026</p>
         </div>
-        <button class="btn-primary" id="lookupBtn">Find My Grades</button>
-        <button class="btn-secondary" id="resetBtn">Clear</button>
-    </div>
 
-    <div id="resultContainer" class="result-area"></div>
-
-    <div class="footer-note">
-        Midterm papers have been corrected and uploaded. You can now view your corrected paper directly.
-    </div>
-</div>
-
-<!-- PDF Modal -->
-<div id="pdfModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="modalTitle">Corrected Midterm Paper</h3>
-            <button onclick="closePdfModal()" style="background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;">×</button>
-        </div>
-        <div class="modal-body">
-            <iframe id="pdfFrame" src=""></iframe>
-        </div>
-    </div>
-</div>
-
-<script>
-// ==================== UPDATED STUDENT DATABASE (from your new screenshot) ====================
-const students = [
-    { 
-        name: "Abdelmajed Hatem", 
-        id: "22P0234", 
-        email: "majedhatem201004@gmail.com", 
-        quiz1: 9.75, 
-        midterm: 18.75 
-    },
-    { 
-        name: "Malak Sameh Abdelaziz Mansour", 
-        id: "2201397", 
-        email: "malaksameh352@gmail.com", 
-        quiz1: 8.5, 
-        midterm: 18.5 
-    },
-    { 
-        name: "Omar Mohamed Rady", 
-        id: "22P0098", 
-        email: "omarrady20004@gmail.com", 
-        quiz1: 4.5, 
-        midterm: 15 
-    },
-    { 
-        name: "Aly Mohamed Hussein", 
-        id: "22P0018", 
-        email: "alymoahmed539@gmail.com", 
-        quiz1: 8.75, 
-        midterm: 15.75 
-    },
-    { 
-        name: "Rana Essam", 
-        id: "22P0061", 
-        email: "rana1essam2@gmail.com", 
-        quiz1: 6, 
-        midterm: 14.5 
-    },
-    { 
-        name: "Carol Micheal Farouk Ishak", 
-        id: "22P0030", 
-        email: "carol.micheal05@gmail.com", 
-        quiz1: 8.25, 
-        midterm: 18.75 
-    },
-    { 
-        name: "Mohab Magdy", 
-        id: "22P0104", 
-        email: "mohabsensei@gmail.com", 
-        quiz1: 0, 
-        midterm: 0 
-    },
-    { 
-        name: "Ezzeldin Ahmed Ezzeldin Hafez", 
-        id: "22P0050", 
-        email: "ezzeldin14735@gmail.com", 
-        quiz1: 7, 
-        midterm: 17.5 
-    },
-    { 
-        name: "Ziad Ahmed Mohamed Nader", 
-        id: "22P0059", 
-        email: "zyaddabdellatif@gmail.com", 
-        quiz1: 8.5, 
-        midterm: 17.5 
-    },
-    { 
-        name: "Ahmed wael Adel Ebrahim", 
-        id: "22P0309", 
-        email: "awael5778@gmail.com", 
-        quiz1: 3.75, 
-        midterm: 11.75 
-    },
-    { 
-        name: "Omar Mohamed Kamal", 
-        id: null, 
-        email: "", 
-        quiz1: null, 
-        midterm: 9.5 
-    }
-];
-
-// PDF Mapping: filename without extension → full filename
-const pdfMap = {
-    "22P0234": "mid22P0234.pdf",
-    "2201397": "mid2201397.pdf",
-    "22P0098": "mid22P0098.pdf",
-    "22P0018": "mid22P0018.pdf",
-    "22P0061": "mid22P0061.pdf",
-    "22P0030": "mid22P0030.pdf",
-    "22P0104": "mid22P0104.pdf",   // assuming it exists, or it will show "not found"
-    "22P0050": "mid22P0050.pdf",
-    "22P0059": "mid22P0059.pdf",
-    "22P0309": "mid22P0309.pdf"
-    // Add more if you upload additional files
-};
-
-// Normalize ID for lookup
-function normalizeId(id) {
-    if (!id) return "";
-    return id.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-}
-
-const studentMap = new Map();
-students.forEach(student => {
-    if (student.id) {
-        const normId = normalizeId(student.id);
-        studentMap.set(normId, { ...student, originalId: student.id });
-    }
-});
-
-function getPdfFilename(studentId) {
-    const norm = normalizeId(studentId);
-    return pdfMap[norm] || null;
-}
-
-// ==================== RENDER FUNCTION ====================
-function renderStudentGrades(student) {
-    const container = document.getElementById("resultContainer");
-    const pdfFile = getPdfFilename(student.id);
-    const hasPdf = !!pdfFile;
-
-    const quizDisplay = student.quiz1 !== null && student.quiz1 !== undefined 
-        ? `${student.quiz1.toFixed(2)} <span style="font-size:1rem;color:#6b7280;">/10</span>` 
-        : "—";
-
-    const midDisplay = student.midterm !== null && student.midterm !== undefined 
-        ? `${student.midterm.toFixed(2)} <span style="font-size:1rem;color:#6b7280;">/20</span>` 
-        : `<span class="absent-tag">Absent</span>`;
-
-    const html = `
-        <div class="card grade-card">
-            <div class="student-identity">
-                <div>
-                    <div class="student-name">${student.name}</div>
-                    \( {student.email ? `<div style="margin-top:6px;color:#64748b;font-size:0.9rem;"> \){student.email}</div>` : ''}
-                </div>
-                <div class="student-id-badge">ID: ${student.originalId || 'N/A'}</div>
+        <!-- Search Section -->
+        <div class="card search-section">
+            <div class="input-group">
+                <label><i class="fas fa-id-card"></i> Student ID</label>
+                <input type="text" id="studentIdInput" placeholder="e.g., 22P0234 or 2201397" autocomplete="off">
             </div>
+            <button class="btn btn-primary" id="lookupBtn">
+                <i class="fas fa-search"></i> View Grades
+            </button>
+            <button class="btn btn-secondary" id="resetBtn">
+                <i class="fas fa-undo"></i> Clear
+            </button>
+        </div>
 
-            <div class="grades-grid">
-                <div class="grade-item">
-                    <div class="grade-label">Quiz 1</div>
-                    <div class="grade-value">${quizDisplay}</div>
-                </div>
-                <div class="grade-item">
-                    <div class="grade-label">Midterm Exam</div>
-                    <div class="grade-value">${midDisplay}</div>
-                </div>
+        <!-- Results -->
+        <div id="resultContainer" class="result-area"></div>
+
+        <div class="footer-note">
+            Corrected midterm papers are available in the "marks" folder.<br>
+            Click the button to view your corrected paper directly.
+        </div>
+    </div>
+
+    <!-- PDF Modal -->
+    <div id="pdfModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Corrected Midterm Paper</h3>
+                <button class="modal-close" onclick="closePdfModal()">×</button>
             </div>
-
-            ${hasPdf ? `
-            <button onclick="viewPdf('\( {pdfFile}', ' \){student.name}')" class="pdf-button">
-                <i class="fas fa-file-pdf"></i> View Corrected Midterm Paper
-            </button>` : `
-            <div style="margin-top:1rem; padding:1rem; background:#fef3c7; border-radius:16px; text-align:center; color:#92400e;">
-                <i class="fas fa-info-circle"></i> Corrected paper will be uploaded soon
-            </div>`}
+            <div class="modal-body">
+                <iframe id="pdfFrame" src=""></iframe>
+            </div>
         </div>
-    `;
+    </div>
 
-    container.innerHTML = html;
-}
+    <script>
+        // ==================== STUDENT DATA (Updated from your screenshot) ====================
+        const students = [
+            { name: "Abdelmajed Hatem",          id: "22P0234", email: "majedhatem201004@gmail.com", quiz1: 9.75,  midterm: 18.75 },
+            { name: "Malak Sameh Abdelaziz Mansour", id: "2201397", email: "malaksameh352@gmail.com", quiz1: 8.5,   midterm: 18.5 },
+            { name: "Omar Mohamed Rady",         id: "22P0098", email: "omarrady20004@gmail.com", quiz1: 4.5,   midterm: 15 },
+            { name: "Aly Mohamed Hussein",       id: "22P0018", email: "alymoahmed539@gmail.com", quiz1: 8.75,  midterm: 15.75 },
+            { name: "Rana Essam",                id: "22P0061", email: "rana1essam2@gmail.com", quiz1: 6,      midterm: 14.5 },
+            { name: "Carol Micheal Farouk Ishak",id: "22P0030", email: "carol.micheal05@gmail.com", quiz1: 8.25, midterm: 18.75 },
+            { name: "Mohab Magdy",               id: "22P0104", email: "mohabsensei@gmail.com", quiz1: 0,      midterm: 0 },
+            { name: "Ezzeldin Ahmed Ezzeldin Hafez", id: "22P0050", email: "ezzeldin14735@gmail.com", quiz1: 7, midterm: 17.5 },
+            { name: "Ziad Ahmed Mohamed Nader",  id: "22P0059", email: "zyaddabdellatif@gmail.com", quiz1: 8.5, midterm: 17.5 },
+            { name: "Ahmed wael Adel Ebrahim",   id: "22P0309", email: "awael5778@gmail.com", quiz1: 3.75, midterm: 11.75 },
+            { name: "Omar Mohamed Kamal",        id: null,      email: "", quiz1: null, midterm: 9.5 }
+        ];
 
-function showNotFound(id) {
-    document.getElementById("resultContainer").innerHTML = `
-        <div class="card" style="padding:2rem; text-align:center; color:#b91c1c; background:#fef2f2;">
-            <i class="fas fa-user-slash" style="font-size:2rem;"></i>
-            <p style="margin:1rem 0 0.5rem; font-weight:600;">Student not found</p>
-            <p>No record found for ID: <strong>${id}</strong><br>Please double-check your Student ID.</p>
-        </div>
-    `;
-}
+        // PDF Mapping - Files are inside "marks" folder
+        const pdfMap = {
+            "22P0234": "marks/mid22P0234.pdf",
+            "2201397": "marks/mid2201397.pdf",
+            "22P0098": "marks/mid22P0098.pdf",
+            "22P0018": "marks/mid22P0018.pdf",
+            "22P0061": "marks/mid22P0061.pdf",
+            "22P0030": "marks/mid22P0030.pdf",
+            "22P0104": "marks/mid22P0104.pdf",
+            "22P0050": "marks/mid22P0050.pdf",
+            "22P0059": "marks/mid22P0059.pdf",
+            "22P0309": "marks/mid22P0309.pdf"
+        };
 
-// PDF Modal functions
-function viewPdf(filename, studentName) {
-    const modal = document.getElementById("pdfModal");
-    const iframe = document.getElementById("pdfFrame");
-    const title = document.getElementById("modalTitle");
+        // Normalize ID for lookup
+        function normalizeId(id) {
+            if (!id) return "";
+            return id.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        }
 
-    title.textContent = `${studentName} - Corrected Midterm`;
-    iframe.src = filename;   // Assumes PDFs are in the same folder as this HTML file
+        const studentMap = new Map();
+        students.forEach(student => {
+            if (student.id) {
+                const normId = normalizeId(student.id);
+                studentMap.set(normId, { ...student, originalId: student.id });
+            }
+        });
 
-    modal.style.display = "flex";
-}
+        function getPdfFilename(studentId) {
+            const norm = normalizeId(studentId);
+            return pdfMap[norm] || null;
+        }
 
-function closePdfModal() {
-    const modal = document.getElementById("pdfModal");
-    const iframe = document.getElementById("pdfFrame");
-    modal.style.display = "none";
-    iframe.src = ""; // unload PDF
-}
+        // Render student grades
+        function renderStudentGrades(student) {
+            const container = document.getElementById("resultContainer");
+            const pdfPath = getPdfFilename(student.id);
+            const hasPdf = !!pdfPath;
 
-// Lookup logic
-function performLookup() {
-    const input = document.getElementById("studentIdInput").value.trim();
-    if (!input) {
-        alert("Please enter your Student ID");
-        return;
-    }
+            const quizDisplay = (student.quiz1 !== null && student.quiz1 !== undefined) 
+                ? `${student.quiz1.toFixed(2)} <span style="font-size:1rem; color:#6b7280;">/10</span>` 
+                : "—";
 
-    const normalized = normalizeId(input);
-    const student = studentMap.get(normalized);
+            const midDisplay = (student.midterm !== null && student.midterm !== undefined) 
+                ? `${student.midterm.toFixed(2)} <span style="font-size:1rem; color:#6b7280;">/20</span>` 
+                : `<span class="absent-tag">Absent</span>`;
 
-    if (student) {
-        renderStudentGrades(student);
-    } else {
-        showNotFound(input);
-    }
-}
+            const html = `
+                <div class="card grade-card">
+                    <div class="student-identity">
+                        <div>
+                            <div class="student-name">${student.name}</div>
+                            \( {student.email ? `<div style="margin-top:8px; color:#64748b; font-size:0.95rem;"> \){student.email}</div>` : ''}
+                        </div>
+                        <div class="student-id-badge">
+                            <i class="fas fa-id-card"></i> ${student.originalId || 'N/A'}
+                        </div>
+                    </div>
 
-// Reset
-function resetLookup() {
-    document.getElementById("studentIdInput").value = "";
-    document.getElementById("resultContainer").innerHTML = `
-        <div class="card" style="padding:3rem; text-align:center; color:#64748b;">
-            <i class="fas fa-graduation-cap" style="font-size:3rem; opacity:0.3;"></i>
-            <p style="margin-top:1rem;">Enter your Student ID above to view your updated grades and corrected midterm paper.</p>
-        </div>
-    `;
-}
+                    <div class="grades-grid">
+                        <div class="grade-item">
+                            <div class="grade-label">Quiz 1</div>
+                            <div class="grade-value">${quizDisplay}</div>
+                        </div>
+                        <div class="grade-item">
+                            <div class="grade-label">Midterm Exam</div>
+                            <div class="grade-value">${midDisplay}</div>
+                        </div>
+                    </div>
 
-// Event listeners
-document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("lookupBtn").addEventListener("click", performLookup);
-    document.getElementById("resetBtn").addEventListener("click", resetLookup);
+                    ${hasPdf ? `
+                    <button onclick="viewPdf('\( {pdfPath}', ' \){student.name.replace(/'/g, "\\'")}')" class="pdf-button">
+                        <i class="fas fa-file-pdf"></i> View Corrected Midterm Paper
+                    </button>` : `
+                    <div style="margin-top:1.5rem; padding:1.2rem; background:#fefce8; border-radius:16px; text-align:center; color:#854d0e;">
+                        <i class="fas fa-info-circle"></i> Corrected paper will be available soon
+                    </div>`}
+                </div>
+            `;
 
-    const input = document.getElementById("studentIdInput");
-    input.addEventListener("keypress", e => {
-        if (e.key === "Enter") performLookup();
-    });
+            container.innerHTML = html;
+        }
 
-    // Initial state
-    resetLookup();
-});
-</script>
+        function showNotFound(idEntered) {
+            document.getElementById("resultContainer").innerHTML = `
+                <div class="card" style="padding:3rem; text-align:center; background:#fef2f2; color:#991b1b;">
+                    <i class="fas fa-user-slash" style="font-size:3rem; opacity:0.7;"></i>
+                    <h3 style="margin:1rem 0 0.5rem;">Student Not Found</h3>
+                    <p>No record found for ID: <strong>${idEntered}</strong><br>Please check your Student ID and try again.</p>
+                </div>
+            `;
+        }
+
+        // PDF Modal Functions
+        function viewPdf(pdfPath, studentName) {
+            const modal = document.getElementById("pdfModal");
+            const iframe = document.getElementById("pdfFrame");
+            const title = document.getElementById("modalTitle");
+
+            title.textContent = `${studentName} - Corrected Midterm`;
+            iframe.src = pdfPath;
+
+            modal.style.display = "flex";
+        }
+
+        function closePdfModal() {
+            const modal = document.getElementById("pdfModal");
+            const iframe = document.getElementById("pdfFrame");
+            modal.style.display = "none";
+            iframe.src = "";
+        }
+
+        // Lookup Function
+        function performLookup() {
+            const input = document.getElementById("studentIdInput").value.trim();
+            if (!input) {
+                alert("Please enter your Student ID");
+                return;
+            }
+
+            const normalized = normalizeId(input);
+            const student = studentMap.get(normalized);
+
+            if (student) {
+                renderStudentGrades(student);
+            } else {
+                showNotFound(input);
+            }
+        }
+
+        function resetLookup() {
+            document.getElementById("studentIdInput").value = "";
+            document.getElementById("resultContainer").innerHTML = `
+                <div class="card" style="padding:3.5rem; text-align:center; color:#64748b;">
+                    <i class="fas fa-graduation-cap" style="font-size:4rem; opacity:0.15;"></i>
+                    <p style="margin-top:1.5rem; font-size:1.1rem;">Enter your Student ID above to view your updated grades and corrected midterm paper.</p>
+                </div>
+            `;
+        }
+
+        // Event Listeners
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("lookupBtn").addEventListener("click", performLookup);
+            document.getElementById("resetBtn").addEventListener("click", resetLookup);
+
+            const inputField = document.getElementById("studentIdInput");
+            inputField.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") {
+                    performLookup();
+                }
+            });
+
+            // Initial state
+            resetLookup();
+        });
+    </script>
 </body>
 </html>
